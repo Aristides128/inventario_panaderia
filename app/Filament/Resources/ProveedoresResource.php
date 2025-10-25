@@ -17,9 +17,9 @@ class ProveedoresResource extends Resource
 {
     protected static ?string $model = Proveedores::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    
-    protected static ?string $navigationGroup = "Gestión de productos";
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+
+    protected static ?string $navigationGroup = "📦 Gestión de productos";
 
     protected static ?int $navigationSort = 2;
 

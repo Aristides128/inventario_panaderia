@@ -15,11 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ComprasResource extends Resource
 {
-    protected static ?string $model = Compras::class;
+   protected static ?string $model = Compras::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+   protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
-    protected static ?string $navigationGroup = "Gestión de productos";
+   protected static ?string $navigationGroup = "📦 Gestión de productos";
+
 
     protected static ?int $navigationSort = 4;
 

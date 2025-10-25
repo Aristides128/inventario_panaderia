@@ -17,9 +17,9 @@ class CategoriasResource extends Resource
 {
     protected static ?string $model = Categorias::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-cog';
   
-    protected static ?string $navigationGroup = "Gestión de productos";
+    protected static ?string $navigationGroup = "📦 Gestión de productos";
 
     protected static ?int $navigationSort = 1;
 

@@ -16,10 +16,13 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ProduccionesResource extends Resource
 {
     protected static ?string $model = Producciones::class;
+protected static ?string $navigationIcon = 'heroicon-o-archive-box';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Gestión de producciones';
+    
+ protected static ?string $navigationGroup = '⚙️ Gestión de producciones';
+
+    protected static ?string $navigationGroupIcon = 'heroicon-s-bread';
     public static function form(Form $form): Form
     {
         return $form

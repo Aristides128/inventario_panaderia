@@ -18,8 +18,9 @@ class EnviosResource extends Resource
     protected static ?string $model = Envios::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
+    protected static ?string $navigationGroup = "🚚 Gestión de envíos";
 
-    protected static ?string $navigationGroup = "Gestión de envios";
 
     protected static ?int $navigationSort = 2;
 

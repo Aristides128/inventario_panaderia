@@ -12,15 +12,18 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Actions\RestoreAction;
+use Filament\Tables\Actions\ForceDeleteAction;
+use Filament\Tables\Filters\TrashedFilter;
 
 class ProduccionesResource extends Resource
 {
     protected static ?string $model = Producciones::class;
-protected static ?string $navigationIcon = 'heroicon-o-archive-box';
+    protected static ?string $navigationIcon = 'heroicon-o-archive-box';
 
+    protected static ?string $navigationGroup = '⚙️ Gestión de producciones';
 
-    
- protected static ?string $navigationGroup = '⚙️ Gestión de producciones';
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationGroupIcon = 'heroicon-s-bread';
     public static function form(Form $form): Form
@@ -56,14 +59,65 @@ protected static ?string $navigationIcon = 'heroicon-o-archive-box';
             ])
             ->filters([
                 //
+                TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Editar')
+                    ->tooltip('Editar producción')
+                    ->visible(function (Producciones $record) {
+                        return $record->deleted_at === null;
+                    })
+                    ->icon('heroicon-o-pencil'),
+
+                RestoreAction::make()
+                    ->tooltip('Restaurar producción')
+                    ->visible(function (Producciones $record) {
+                        return $record->deleted_at !== null;
+                    }),
+
+                Tables\Actions\DeleteAction::make()
+                    ->label('Eliminar')
+                    ->tooltip('Eliminar producción')
+                    ->visible(function (Producciones $record) {
+                        return $record->deleted_at === null;
+                    })
+                    ->icon('heroicon-o-trash'),
+
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->tooltip('Ver producción')
+                    ->icon('heroicon-o-eye')
+                    ->color('info'),
+                ForceDeleteAction::make()
+                    ->label('Borrado definitivo')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Eliminar producción?')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar esta producción? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->action(function (Producciones $record) {
+                        $record->forceDelete();
+                    })
+                    ->tooltip('Eliminar definitivamente'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
+                // Restauración multiple de datos eliminados logícamente
+                Tables\Actions\RestoreBulkAction::make()
+                    ->color('success')
+                    ->label('Restaurar registros')
+                    ->tooltip('Restaurar producción')
+                ,
+
+                // Borrado definitivo multiple de datos eliminados logícamente
+                Tables\Actions\ForceDeleteBulkAction::make()
+                    ->color('danger')
+                    ->label('Borrar registros definitivamente')
+                    ->tooltip('Borrar definitivamente producción')
+
             ]);
     }
 

@@ -12,6 +12,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Actions\RestoreAction;
+use Filament\Tables\Actions\ForceDeleteAction;
+use Filament\Tables\Filters\TrashedFilter;
 
 class DetalleproduccionesResource extends Resource
 {
@@ -21,21 +24,30 @@ class DetalleproduccionesResource extends Resource
 
     protected static ?string $navigationGroup = '⚙️ Gestión de producciones';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('id_produccion')
+                Forms\Components\Select::make('id_produccion')
+                    ->label('Producción')
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('id_producto')
+                    ->preload()
+                    ->relationship('produccion', 'observaciones')
+                    ->searchable()
+                    ->columnSpan('full'),
+                Forms\Components\Select::make('id_producto')
+                    ->label('Producto')
                     ->required()
-                    ->numeric(),
+                    ->preload()
+                    ->relationship('producto', 'nombre')
+                    ->searchable()
+                    ->columnSpan('full'),
                 Forms\Components\TextInput::make('cantidad_utilizada')
+                    ->label('Cantidad utilizada')
                     ->required()
-                    ->numeric(),
+                   
             ]);
     }
 
@@ -44,37 +56,90 @@ class DetalleproduccionesResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id_produccion')
+                    ->label('Producción')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('id_producto')
+                    ->label('Producto')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cantidad_utilizada')
+                    ->label('Cantidad utilizada')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha de creación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Fecha de actualización')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+             
             ])
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                    Tables\Actions\EditAction::make()
+                    ->label('Editar')
+                    ->tooltip('Editar detalle de producción')
+                    ->visible(function (Detalleproducciones $record) {
+                        return $record->deleted_at === null;
+                    })
+                    ->icon('heroicon-o-pencil'),
+
+                RestoreAction::make()
+                    ->tooltip('Restaurar detalle de producción')
+                    ->visible(function (Detalleproducciones $record) {
+                        return $record->deleted_at !== null;
+                    }),
+
+                Tables\Actions\DeleteAction::make()
+                    ->label('Eliminar')
+                    ->tooltip('Eliminar detalle de producción')
+                    ->visible(function (Detalleproducciones $record) {
+                        return $record->deleted_at === null;
+                    })
+                    ->icon('heroicon-o-trash'),
+
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->tooltip('Ver detalle de producción')
+                    ->icon('heroicon-o-eye')
+                    ->color('info'),
+                ForceDeleteAction::make()
+                    ->label('Borrado definitivo')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Eliminar detalle de producción?')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar este detalle de producción? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->action(function (Detalleproducciones $record) {
+                        $record->forceDelete();
+                    })
+                    ->tooltip('Eliminar definitivamente'),
+
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
+                     // Restauración multiple de datos eliminados logícamente
+                Tables\Actions\RestoreBulkAction::make()
+                    ->color('success')
+                    ->label('Restaurar registros')
+                    ->tooltip('Restaurar detalle de producción')
+                ,
+
+                // Borrado definitivo multiple de datos eliminados logícamente
+                Tables\Actions\ForceDeleteBulkAction::make()
+                    ->color('danger')
+                    ->label('Borrar registros definitivamente')
+                    ->tooltip('Borrar definitivamente detalle de producción')
+              
             ]);
     }
 

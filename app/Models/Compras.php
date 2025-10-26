@@ -22,4 +22,16 @@ class Compras extends Model
         'observaciones',
         'fecha_vencimiento',
     ];
+    public function producto()
+    {
+        return $this->belongsTo(Productos::class, 'id_producto');
+    }
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedores::class, 'id_proveedor');
+    }
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursales::class, 'id_sucursal');
+    }
 }

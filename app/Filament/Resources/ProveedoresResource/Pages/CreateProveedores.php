@@ -8,5 +8,10 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateProveedores extends CreateRecord
 {
+    // Redireccionar al listado después de crear
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
     protected static string $resource = ProveedoresResource::class;
 }

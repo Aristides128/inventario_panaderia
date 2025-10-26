@@ -12,15 +12,17 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Actions\RestoreAction;
+use Filament\Tables\Actions\ForceDeleteAction;
+use Filament\Tables\Filters\TrashedFilter;
 
 class EnviosResource extends Resource
 {
     protected static ?string $model = Envios::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    
-    protected static ?string $navigationGroup = "🚚 Gestión de envíos";
 
+    protected static ?string $navigationGroup = "🚚 Gestión de envíos";
 
     protected static ?int $navigationSort = 2;
 
@@ -28,15 +30,21 @@ class EnviosResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('id_producto')
+                Forms\Components\Select::make('id_producto')
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('id_sucursal')
+                    ->searchable()
+                    ->relationship('producto', 'nombre')
+                    ->preload(),
+                Forms\Components\Select::make('id_sucursal')
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('sucursal_destino_id')
+                    ->searchable()
+                    ->relationship('sucursal', 'nombre')
+                    ->preload(),
+                Forms\Components\Select::make('sucursal_destino_id')
                     ->required()
-                    ->numeric(),
+                    ->searchable()
+                    ->relationship('sucursal_destino', 'nombre')
+                    ->preload(),
                 Forms\Components\TextInput::make('cantidad')
                     ->required()
                     ->numeric()
@@ -53,45 +61,88 @@ class EnviosResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id_producto')
-                    ->numeric()
+                    ->label('Producto')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('id_sucursal')
-                    ->numeric()
+                    ->label('Sucursal')
+
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sucursal_destino_id')
-                    ->numeric()
+                    ->label('Sucursal Destino')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cantidad')
-                    ->numeric()
+                    ->label('Cantidad')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('observaciones')
+                    ->label('Observaciones')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('fecha_vencimiento')
+                    ->label('Fecha de Vencimiento')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Fecha de Actualización')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
             ])
             ->filters([
                 //
+                TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Editar')
+                    ->tooltip('Editar envío')
+                    ->visible(function (Envios $record) {
+                        return $record->deleted_at === null;
+                    })
+                    ->icon('heroicon-o-pencil'),
+                RestoreAction::make()
+                    ->tooltip('Restaurar envío')
+                    ->visible(function (Envios $record) {
+                        return $record->deleted_at !== null;
+                    }),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Eliminar')
+                    ->tooltip('Eliminar envío')
+                    ->visible(function (Envios $record) {
+                        return $record->deleted_at === null;
+                    }),
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->tooltip('Ver envío')
+                    ->icon('heroicon-o-eye')
+                    ->color('info'),
+                ForceDeleteAction::make()
+                    ->label('Borrar definitivamente')
+                    ->tooltip('Eliminar definitivamente envío')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Eliminar envío?')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar esta envío? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->action(function (Envios $record) {
+                        $record->forceDelete();
+                    }),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Restauración multiple de datos eliminados logícamente
+                Tables\Actions\RestoreBulkAction::make()
+                    ->color('success')
+                    ->label('Restaurar registros')
+                    ->tooltip('Restaurar envío')
+                ,
+
+                // Borrado definitivo multiple de datos eliminados logícamente
+                Tables\Actions\ForceDeleteBulkAction::make()
+                    ->color('danger')
+                    ->label('Borrar registros definitivamente')
+                    ->tooltip('Borrar definitivamente envío')
+
             ]);
     }
 

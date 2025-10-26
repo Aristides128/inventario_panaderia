@@ -16,4 +16,8 @@ class Productos extends Model
         'id_categoria',
         'stock',
     ];
+    public function categoria()
+    {
+        return $this->belongsTo(Categorias::class, 'id_categoria');
+    }
 }

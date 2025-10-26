@@ -17,4 +17,19 @@ class Envios extends Model
         'cantidad',
         'observaciones',
     ];
+
+    public function producto()
+    {
+        return $this->belongsTo(Productos::class, 'id_producto');
+    }
+
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursales::class, 'id_sucursal');
+    }
+
+    public function sucursal_destino()
+    {
+        return $this->belongsTo(Sucursales::class, 'sucursal_destino_id');
+    }
 }

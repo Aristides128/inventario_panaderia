@@ -30,11 +30,27 @@ class ProduccionesResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\DatePicker::make('fecha_produccion')
-                    ->required(),
-                Forms\Components\Textarea::make('observaciones')
-                    ->columnSpanFull(),
-            ]);
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\DatePicker::make('fecha_produccion')
+                        ->label('Fecha de producción')
+                        ->prefixIcon('heroicon-o-calendar')
+                        ->hint('Ingrese fecha de producción')    
+                        ->hintIcon('heroicon-o-calendar')
+                        ->required(),
+                        Forms\Components\Textarea::make('observaciones')
+                        ->label('observaciones de producción')
+                        ->hint('Ingrese observación de producción')
+                        ->hintIcon('heroicon-o-calendar')
+                        ->placeholder('Ingrese Observación de producción')    
+                        ->columnSpanFull(),
+                    ])
+                    ->columns(1)
+                    ->columnSpan('lg')
+                    ->extraAttributes(['class' => 'shadow-md']),
+            ])
+            ->columns(1)
+            ->extraAttributes(['class' => 'py-6']);
     }
 
     public static function table(Table $table): Table

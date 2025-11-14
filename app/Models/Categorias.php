@@ -13,4 +13,9 @@ class Categorias extends Model
     protected $primaryKey = 'id_categoria';
     protected $fillable = ['nombre', 'descripcion', 'deleted_at'];
     protected $dates = ['deleted_at'];
+
+    public function productos()
+    {
+        return $this->hasMany(Productos::class, 'id_categoria');
+    }
 }

@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ComprasResource\Pages;
-use App\Filament\Resources\ComprasResource\RelationManagers;
 use App\Models\Compras;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
@@ -26,52 +23,139 @@ class ComprasResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('id_producto')
-                    ->searchable()
-                    ->relationship('producto', 'nombre')
-                    ->preload()
-                    ->required(),
-                Forms\Components\Select::make('id_proveedor')
-                    ->searchable()
-                    ->relationship('proveedor', 'nombre')
-                    ->preload()
-                    ->required(),
-                Forms\Components\Select::make('id_sucursal')
-                    ->searchable()
-                    ->relationship('sucursal', 'nombre')
-                    ->preload()
-                    ->required(),
-                Forms\Components\TextInput::make('cantidad_paquetes')
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\TextInput::make('cantidad_producto')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\TextInput::make('precio_total')
-                    ->required()
-                    ->numeric()
-                    ->default(0.00),
-                Forms\Components\TextInput::make('precio_unitario')
-                    ->numeric()
-                    ->default(0.00),
-                Forms\Components\Select::make('estado_compra')
-                    ->options([
-                        'Pendiente'=> 'Pendiente',
-                        'Recibido'=> 'Recibido',
-                        'Cancelado'=> 'Cancelado',
+                Forms\Components\Tabs::make('Tabs')
+                    ->tabs([
+
+                        // Pestaña de Productos
+                        Forms\Components\Tabs\Tab::make('Productos')
+                            ->icon('heroicon-o-shopping-bag')
+                            ->schema([
+                                Forms\Components\Card::make()
+                                    ->schema([
+                                        Forms\Components\Repeater::make('productos')
+                                            ->label('')
+                                            ->schema([
+                                                Forms\Components\Select::make('id_proveedor')
+                                                    ->label('Proveedor')
+                                                    ->placeholder('Seleccione un proveedor')
+                                                    ->relationship('proveedor', 'nombre')
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->required()
+                                                    ->hint('Seleccione el proveedor antes de elegir el producto')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->prefixIcon('heroicon-o-user')
+                                                    ->afterStateUpdated(fn($state, callable $set) => $set('id_producto', null))
+                                                    ->columnSpan(['md' => 2]),
+
+
+                                                Forms\Components\Select::make('id_producto')
+                                                    ->label('Producto')
+                                                    ->placeholder('Seleccione un producto')
+                                                    ->relationship('producto', 'nombre')
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->required()
+                                                    ->hint('Seleccione un producto para calcular el precio total')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->prefixIcon('heroicon-o-shopping-bag')
+
+                                                    ->columnSpan(['md' => 2]),
+
+                                                Forms\Components\TextInput::make('cantidad_paquetes')
+                                                    ->label('Cantidad de paquetes')
+                                                    ->placeholder('Ingrese la cantidad de paquetes')
+                                                    ->numeric()
+                                                    ->default(1)
+                                                    ->minValue(1)
+                                                    ->hint('Cantidad de paquetes para calcular el total')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->prefixIcon('heroicon-o-clipboard-document-list')
+                                                    ->columnSpan(['md' => 1]),
+
+                                                Forms\Components\TextInput::make('cantidad')
+                                                    ->label('Cantidad de productos')
+                                                    ->placeholder('Ingrese la cantidad')
+                                                    ->numeric()
+                                                    ->default(1)
+                                                    ->minValue(1)
+                                                    ->required()
+                                                    ->reactive()
+                                                    ->hint('Cantidad de productos para calcular el precio total')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->prefixIcon('heroicon-o-clipboard-document-list')
+                                                    ->afterStateUpdated(function ($state, callable $set, $get) {
+                                                        $cantidad = max(1, (float) $state);
+                                                        $set('cantidad', $cantidad);
+                                                        $set('precio_total', ($get('precio_unitario') ?? 0) * $cantidad);
+                                                    })
+                                                    ->afterStateHydrated(function (callable $set, $state) {
+                                                        if ((float) $state < 1)
+                                                            $set('cantidad', 1);
+                                                    })
+                                                    ->columnSpan(['md' => 1]),
+
+
+                                                Forms\Components\TextInput::make('precio_unitario')
+                                                    ->label('Precio unitario (Q)')
+                                                    ->numeric()
+                                                    ->default(1)
+                                                    ->minValue(1)
+                                                    ->required()
+                                                    ->reactive()
+                                                    ->hint('Precio unitario del producto')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->prefixIcon('heroicon-o-currency-dollar')
+                                                    ->afterStateUpdated(function ($state, callable $set, $get) {
+                                                        $set('precio_total', $state * ($get('cantidad') ?? 1));
+                                                    })
+                                                    ->columnSpan(['md' => 1]),
+
+                                                Forms\Components\TextInput::make('precio_total')
+                                                    ->label('Total (Q)')
+                                                    ->placeholder('Precio total calculado automáticamente')
+                                                    ->numeric()
+                                                    ->disabled()
+                                                    ->prefixIcon('heroicon-o-currency-dollar')
+                                                    ->columnSpan(['md' => 1]),
+
+                                                Forms\Components\DatePicker::make('fecha_vencimiento')
+                                                    ->label('Fecha de vencimiento')
+                                                    ->columnSpan(['md' => 1])
+                                                    ->minDate(now())
+                                                    ->displayFormat('d/m/Y')
+                                                    ->hint('Requerido para productos perecederos')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->prefixIcon('heroicon-o-calendar'),
+                                            ])
+                                            ->columns(2)
+                                            ->createItemButtonLabel('Agregar producto')
+
+                                            ->defaultItems(1)
+                                            ->minItems(1)
+                                            ->collapsible()
+                                            ->itemLabel(function (array $state): string {
+                                                $producto = $state['id_producto'] ? \App\Models\Productos::find($state['id_producto']) : null;
+                                                $proveedor = $state['id_proveedor'] ? \App\Models\Proveedores::find($state['id_proveedor']) : null;
+
+                                                $nombreProducto = $producto?->nombre ?? 'Producto no seleccionado';
+                                                $nombreProveedor = $proveedor?->nombre ? " ({$proveedor->nombre})" : '';
+
+                                                return $nombreProducto . $nombreProveedor . ' x' . ($state['cantidad'] ?? 1);
+                                            })
+                                            ->columnSpan('full'),
+                                    ]),
+                            ])
                     ])
-                    ->default('Pendiente')
-                    ->required(),
-                Forms\Components\TextInput::make('observaciones')
-                    ->maxLength(255)
-                    ->default(null),
-                Forms\Components\DatePicker::make('fecha_vencimiento'),
-            ]);
+                    ->columnSpan('lg')
+                    ->persistTabInQueryString()
+            ])
+            ->columns(1);
     }
 
     public static function table(Table $table): Table
@@ -97,7 +181,7 @@ class ComprasResource extends Resource
                 Tables\Columns\TextColumn::make('estado_compra')
                     ->label('Estado de la Compra')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('fecha_vencimiento')
                     ->date()
                     ->sortable(),
@@ -116,7 +200,7 @@ class ComprasResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
-                 Tables\Actions\EditAction::make()
+                Tables\Actions\EditAction::make()
                     ->label('Editar')
                     ->tooltip('Editar compras')
                     ->visible(function (Compras $record) {

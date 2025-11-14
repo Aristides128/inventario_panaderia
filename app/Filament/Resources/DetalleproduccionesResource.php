@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DetalleproduccionesResource\Pages;
-use App\Filament\Resources\DetalleproduccionesResource\RelationManagers;
 use App\Models\Detalleproducciones;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
@@ -30,15 +27,25 @@ class DetalleproduccionesResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Card::make()
+                ->schema([
                 Forms\Components\Select::make('id_produccion')
-                    ->label('Producción')
+                    ->label('Seleccione la Producción')
+                    ->hint('')
+                    ->placeholder('Seleccione una producción')
+                    ->hintIcon('')
+                    ->prefixIcon('')
                     ->required()
                     ->preload()
                     ->relationship('produccion', 'observaciones')
                     ->searchable()
                     ->columnSpan('full'),
                 Forms\Components\Select::make('id_producto')
-                    ->label('Producto')
+                    ->label('Seleccione producto utilizado')
+                    ->hint('')
+                    ->placeholder('Seleccione un producto')
+                    ->hintIcon('')
+                    ->prefixIcon('')
                     ->required()
                     ->preload()
                     ->relationship('producto', 'nombre')
@@ -46,9 +53,14 @@ class DetalleproduccionesResource extends Resource
                     ->columnSpan('full'),
                 Forms\Components\TextInput::make('cantidad_utilizada')
                     ->label('Cantidad utilizada')
+                    ->hint('')
+                    ->numeric()
+                    ->hintIcon('')
+                    ->prefixIcon('')
                     ->required()
                    
-            ]);
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table

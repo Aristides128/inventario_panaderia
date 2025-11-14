@@ -15,6 +15,7 @@ class Productos extends Model
         'descripcion',
         'id_categoria',
         'stock',
+        'unidad_medida',
     ];
     public function categoria()
     {

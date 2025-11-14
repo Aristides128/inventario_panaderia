@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
+use Schema;
 
 class EnviosResource extends Resource
 {
@@ -30,30 +31,63 @@ class EnviosResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('id_producto')
-                    ->required()
-                    ->searchable()
-                    ->relationship('producto', 'nombre')
-                    ->preload(),
-                Forms\Components\Select::make('id_sucursal')
-                    ->required()
-                    ->searchable()
-                    ->relationship('sucursal', 'nombre')
-                    ->preload(),
-                Forms\Components\Select::make('sucursal_destino_id')
-                    ->required()
-                    ->searchable()
-                    ->relationship('sucursal_destino', 'nombre')
-                    ->preload(),
-                Forms\Components\TextInput::make('cantidad')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\TextInput::make('observaciones')
-                    ->maxLength(255)
-                    ->default(null),
-                Forms\Components\DatePicker::make('fecha_vencimiento'),
-            ]);
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Select::make('id_producto')
+                                    ->required()
+                                    ->searchable()
+                                    ->prefixIcon('heroicon-o-shopping-bag')
+                                    ->hint('Seleccione un producto')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->relationship('producto', 'nombre')
+                                    ->preload(),
+
+                                Forms\Components\Select::make('id_sucursal')
+                                    ->required()
+                                    ->searchable()
+                                    ->hint('Seleccione una sucursal')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->prefixIcon('heroicon-o-building-storefront')
+                                    ->relationship('sucursal', 'nombre')
+                                    ->preload(),
+
+                                Forms\Components\Select::make('sucursal_destino_id')
+                                    ->required()
+                                    ->searchable()
+                                    ->hint('Seleccione una sucursal destino')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->prefixIcon('heroicon-o-building-storefront')
+                                    ->relationship('sucursal_destino', 'nombre')
+                                    ->preload(),
+
+                                Forms\Components\TextInput::make('cantidad')
+                                    ->label('Cantidad de productos')
+                                    ->placeholder('Cantidad a enviar')
+                                    ->hint('Cantidad de productos a enviar')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->prefixIcon('heroicon-o-clipboard-document-list')
+                                    ->required()
+                                    ->numeric()
+                                    ->default(0),
+
+                                Forms\Components\DatePicker::make('fecha_vencimiento')
+                                    ->label('Fecha de vencimiento')
+                                    ->hint('Fecha de vencimiento del producto')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->required(),
+
+                                Forms\Components\Textarea::make('observaciones')
+                                    ->placeholder('Observaciones del envío')
+                                    ->maxLength(255)
+                                    ->columnSpanFull()
+                                    ->default(null)
+                                   
+                            ]), // Cierre de Grid::make
+                    ]), // Cierre de Card::make
+            ]); // Cierre de schema y form
     }
 
     public static function table(Table $table): Table
@@ -65,7 +99,6 @@ class EnviosResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('id_sucursal')
                     ->label('Sucursal')
-
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sucursal_destino_id')
                     ->label('Sucursal Destino')
@@ -93,9 +126,17 @@ class EnviosResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
+
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->tooltip('Ver envío')
+                    ->icon('heroicon-o-eye')
+                    ->color('primary'),
+
                 Tables\Actions\EditAction::make()
                     ->label('Editar')
                     ->tooltip('Editar envío')
+                    ->color('success')
                     ->visible(function (Envios $record) {
                         return $record->deleted_at === null;
                     })
@@ -108,14 +149,11 @@ class EnviosResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Eliminar')
                     ->tooltip('Eliminar envío')
+                    ->color('danger')
                     ->visible(function (Envios $record) {
                         return $record->deleted_at === null;
                     }),
-                Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver envío')
-                    ->icon('heroicon-o-eye')
-                    ->color('info'),
+
                 ForceDeleteAction::make()
                     ->label('Borrar definitivamente')
                     ->tooltip('Eliminar definitivamente envío')

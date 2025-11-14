@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
+use function Livewire\wrap;
 
 class SucursalesResource extends Resource
 {
@@ -29,14 +30,37 @@ class SucursalesResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nombre')
-                    ->required()
-                    ->maxLength(100),
-                Forms\Components\TextInput::make('direccion')
-                    ->required()
-                    ->maxLength(255),
-            ]);
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('nombre')
+                            ->required()
+                            ->prefixIcon('heroicon-o-truck')
+                            ->label('Nombre de la sucursal')
+                            ->hint('Nombre descriptivo de la sucursal')
+                            ->hintIcon('heroicon-o-information-circle')
+                            ->hintColor('primary')
+                            ->placeholder('Ingrese el nombre de la sucursal')
+                            ->maxLength(100)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Textarea::make('direccion')
+                            ->required()
+                            ->label('Dirección de la sucursal')
+                            ->hint('Dirección de la sucursal')
+                            ->hintIcon('heroicon-o-information-circle')
+                            ->hintColor('primary')
+                            ->placeholder('Ingrese la dirección de la sucursal')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(1)
+                    ->columnSpan('lg')
+                    ->extraAttributes(['class' => 'shadow-md']),
+            ])
+            ->columns(1)
+            ->extraAttributes(['class' => 'py-6']);
     }
+
 
     public static function table(Table $table): Table
     {
@@ -44,33 +68,52 @@ class SucursalesResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nombre')
                     ->label('Nombre de la Sucursal')
-                    ->searchable(),
+                    ->icon('heroicon-o-truck')
+                    ->iconColor('primary')
+                    ->wrap()
+                    ->searchable()
+                    ->sortable()
+                    ->tooltip('Haz clic para ordenar por nombre'),
+
                 Tables\Columns\TextColumn::make('direccion')
                     ->label('Dirección')
-                    ->searchable(),
+                    ->searchable()
+                    ->icon('heroicon-o-map')
+                    ->iconColor('primary')
+                    ->wrap()
+                    ->sortable()
+                    ->tooltip('Haz clic para ordenar por dirección'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime()
                     ->sortable()
+                    ->wrap()
+                    ->description(fn(Sucursales $record) => 'Creado: ' . $record->created_at->diffForHumans())
+                    ->tooltip(fn(Sucursales $record) => 'Creado el ' . $record->created_at->format('d/m/Y \a \l\a\s H:i'))
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Fecha de Actualización')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->label('Fecha de Borrado')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->wrap()
+                    ->description(fn(Sucursales $record) => 'Actualizado: ' . $record->updated_at->diffForHumans())
+                    ->tooltip(fn(Sucursales $record) => 'Actualizado el ' . $record->updated_at->format('d/m/Y \a \l\a\s H:i'))
+                    ->toggleable(isToggledHiddenByDefault: true)
             ])
             ->filters([
                 TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->tooltip('Ver sucursal')
+                    ->icon('heroicon-o-eye')
+                    ->color('primary'),
+
                 Tables\Actions\EditAction::make()
                     ->label('Editar')
                     ->tooltip('Editar sucursal')
+                    ->color('success')
                     ->visible(function (Sucursales $record) {
                         return $record->deleted_at === null;
                     })
@@ -85,16 +128,12 @@ class SucursalesResource extends Resource
                 Tables\Actions\DeleteAction::make()
                     ->label('Eliminar')
                     ->tooltip('Eliminar sucursal')
+                    ->color('danger')
                     ->visible(function (Sucursales $record) {
                         return $record->deleted_at === null;
                     })
                     ->icon('heroicon-o-trash'),
 
-                Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver sucursal')
-                    ->icon('heroicon-o-eye')
-                    ->color('info'),
                 ForceDeleteAction::make()
                     ->label('Borrado definitivo')
                     ->icon('heroicon-o-trash')

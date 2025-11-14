@@ -25,6 +25,10 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->registration()
+            ->passwordReset()
+            ->emailVerification()
+            ->profile()
             ->brandName('Inventario panaderia')
             ->brandLogo(asset('storage/images/Panaderia-francesa.png'))
             ->brandLogoHeight('4rem')

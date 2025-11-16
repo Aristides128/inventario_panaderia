@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre', 100);
             $table->string('descripcion', 255);
             $table->foreignId('id_categoria')->constrained('categorias', 'id_categoria')->onDelete('cascade');
-            $table->decimal('stock', 10, 2)->default(0);
+            $table->integer('stock_actual')->default(0);
             $table->enum('unidad_medida', ['kilogramo', 'unidad', 'libras' ,'onzas', 'gramos', 'litros'])->default('unidad');
             $table->softDeletes();
             $table->timestamps();

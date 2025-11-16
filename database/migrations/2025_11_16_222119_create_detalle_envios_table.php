@@ -4,18 +4,17 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('detalleproducciones', function (Blueprint $table) {
-            $table->id('id_detalle');
-            $table->foreignId('id_produccion')->constrained('producciones', 'id_produccion')->onDelete('cascade');
+        Schema::create('detalle_envios', function (Blueprint $table) {
+            $table->bigIncrements('id_detalle_envio');
+            $table->foreignId('id_envio')->constrained('envios', 'id_envio')->onDelete('cascade');
             $table->foreignId('id_producto')->constrained('productos', 'id_producto')->onDelete('cascade');
-            $table->decimal('cantidad_utilizada', 10, 2);
+            $table->integer('cantidad')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('detalleproducciones');
+        Schema::dropIfExists('detalle_envios');
     }
 };

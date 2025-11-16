@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,12 +12,10 @@ return new class extends Migration
     {
         Schema::create('envios', function (Blueprint $table) {
             $table->id('id_envio');
-            $table->foreignId('id_producto')->constrained('productos', 'id_producto')->onDelete('cascade');
             $table->foreignId('id_sucursal')->constrained('sucursales', 'id_sucursal')->onDelete('cascade');
             $table->foreignId('sucursal_destino_id')->constrained('sucursales', 'id_sucursal')->onDelete('cascade');
-            $table->integer('cantidad')->default(0);
             $table->string('observaciones', 255)->nullable();
-            $table->date('fecha_vencimiento')->nullable();
+            $table->date('fecha_envio');
             $table->timestamps();
             $table->softDeletes();
         });

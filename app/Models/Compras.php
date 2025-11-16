@@ -11,17 +11,12 @@ class Compras extends Model
     protected $table = 'compras';
     protected $primaryKey = 'id_compra';
     protected $fillable = [
-        'id_producto',
-        'id_proveedor',
+        'fecha_compra',
         'id_sucursal',
-        'cantidad_paquetes',
-        'cantidad_productos',
-        'precio_total',
-        'precio_unitario',
         'estado_compra',
         'observaciones',
-        'fecha_vencimiento',
     ];
+
     public function producto()
     {
         return $this->belongsTo(Productos::class, 'id_producto');

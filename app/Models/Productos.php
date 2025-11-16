@@ -14,7 +14,7 @@ class Productos extends Model
         'nombre',
         'descripcion',
         'id_categoria',
-        'stock',
+        'stock_actual',
         'unidad_medida',
     ];
     public function categoria()

@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->integer('cantidad')->default(0);
             $table->date('fecha_vencimiento')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

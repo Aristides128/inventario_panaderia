@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\DetalleproduccionesResource\Pages;
-use App\Models\Detalleproducciones;
+use App\Filament\Resources\DetalleProduccionesResource\Pages;
+use App\Models\DetalleProducciones;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,9 +13,9 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
 
-class DetalleproduccionesResource extends Resource
+class DetalleProduccionesResource extends Resource
 {
-    protected static ?string $model = Detalleproducciones::class;
+    protected static ?string $model = DetalleProducciones::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-scale';
 
@@ -98,21 +98,21 @@ class DetalleproduccionesResource extends Resource
                     Tables\Actions\EditAction::make()
                     ->label('Editar')
                     ->tooltip('Editar detalle de producción')
-                    ->visible(function (Detalleproducciones $record) {
+                    ->visible(function (DetalleProducciones $record) {
                         return $record->deleted_at === null;
                     })
                     ->icon('heroicon-o-pencil'),
 
                 RestoreAction::make()
                     ->tooltip('Restaurar detalle de producción')
-                    ->visible(function (Detalleproducciones $record) {
+                    ->visible(function (DetalleProducciones $record) {
                         return $record->deleted_at !== null;
                     }),
 
                 Tables\Actions\DeleteAction::make()
                     ->label('Eliminar')
                     ->tooltip('Eliminar detalle de producción')
-                    ->visible(function (Detalleproducciones $record) {
+                    ->visible(function (DetalleProducciones $record) {
                         return $record->deleted_at === null;
                     })
                     ->icon('heroicon-o-trash'),
@@ -131,7 +131,7 @@ class DetalleproduccionesResource extends Resource
                     ->modalDescription('¿Estás seguro de que deseas eliminar este detalle de producción? Esta acción no se puede deshacer.')
                     ->modalSubmitActionLabel('Sí, eliminar')
                     ->modalCancelActionLabel('Cancelar')
-                    ->action(function (Detalleproducciones $record) {
+                    ->action(function (DetalleProducciones $record) {
                         $record->forceDelete();
                     })
                     ->tooltip('Eliminar definitivamente'),

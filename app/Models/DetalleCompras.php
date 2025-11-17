@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class detalle_compra extends Model
+class DetalleCompras extends Model
 {
     //
     use SoftDeletes;
     protected $table = 'detalle_compras';
-    protected $primaryKey = 'id_detalle';
+    protected $primaryKey = 'id_detalle_compra';
     protected $fillable = [
         'id_compra',
         'id_proveedor',

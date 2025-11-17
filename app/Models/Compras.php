@@ -13,13 +13,14 @@ class Compras extends Model
     protected $fillable = [
         'fecha_compra',
         'id_sucursal',
+        'total',
         'estado_compra',
         'observaciones',
     ];
 
-    public function producto()
+    public function detalle_compra()
     {
-        return $this->belongsTo(Productos::class, 'id_producto');
+        return $this->belongsTo(DetalleCompras::class, 'id_detalle_compra');
     }
     public function proveedor()
     {

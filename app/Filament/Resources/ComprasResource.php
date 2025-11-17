@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ComprasResource\Pages;
 use App\Models\Compras;
+use App\Models\Productos;
+use App\Models\Proveedores;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -140,8 +142,8 @@ class ComprasResource extends Resource
                                             ->minItems(1)
                                             ->collapsible()
                                             ->itemLabel(function (array $state): string {
-                                                $producto = $state['id_producto'] ? \App\Models\Productos::find($state['id_producto']) : null;
-                                                $proveedor = $state['id_proveedor'] ? \App\Models\Proveedores::find($state['id_proveedor']) : null;
+                                                $producto = $state['id_producto'] ? Productos::find($state['id_producto']) : null;
+                                                $proveedor = $state['id_proveedor'] ? Proveedores::find($state['id_proveedor']) : null;
 
                                                 $nombreProducto = $producto?->nombre ?? 'Producto no seleccionado';
                                                 $nombreProveedor = $proveedor?->nombre ? " ({$proveedor->nombre})" : '';

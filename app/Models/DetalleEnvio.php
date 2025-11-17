@@ -5,18 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class lotes extends Model
+class DetalleEnvio extends Model
 {
     //
+
     use SoftDeletes;
-    protected $table = 'lotes';
-    protected $primaryKey = 'id_lote';
+    protected $table = 'detalle_envios';
+    protected $primaryKey = 'id_detalle_envio';
     protected $fillable = [
+        'id_envio',
         'id_producto',
-        'semana',
-        'mes',
-        'anio',
+        'cantidad',
     ];
+
+    public function envio()
+    {
+        return $this->belongsTo(envios::class, 'id_envio');
+    }
     public function producto()
     {
         return $this->belongsTo(Productos::class, 'id_producto');

@@ -7,14 +7,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Producciones;
 use App\Models\Productos;
 
-class Detalleproducciones extends Model
+class DetalleProducciones extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'detalleproducciones';
-    protected $primaryKey = 'id_detalle';
+    protected $table = 'detalle_producciones';
+    protected $primaryKey = 'id_detalle_producciones';
 
-    
     protected $fillable = [
         'id_produccion',
         'id_producto',

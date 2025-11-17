@@ -11,19 +11,13 @@ class Envios extends Model
     protected $table = 'envios';
     protected $primaryKey = 'id_envio';
     protected $fillable = [
-        'id_producto',
         'id_sucursal',
         'sucursal_destino_id',
-        'cantidad',
         'observaciones',
+        'fecha_envio',
     ];
 
-    public function producto()
-    {
-        return $this->belongsTo(Productos::class, 'id_producto');
-    }
-
-    public function sucursal()
+    public function sucursal_origen()
     {
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }
@@ -31,5 +25,10 @@ class Envios extends Model
     public function sucursal_destino()
     {
         return $this->belongsTo(Sucursales::class, 'sucursal_destino_id');
+    }
+
+    public function detalle_envios()
+    {
+        return $this->hasMany(detalle_envios::class, 'id_envio');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ComprasResource\Pages;
+use App\Filament\Resources\ComprasResource\RelationManagers;
 use App\Models\Compras;
 use App\Models\Productos;
 use App\Models\Proveedores;
@@ -15,6 +16,9 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
 class ComprasResource extends Resource
 {
     protected static ?string $model = Compras::class;
@@ -25,7 +29,8 @@ class ComprasResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
-
+    protected static ?string $modelLabel = 'nueva compra' ;
+    protected static ?string $pluralModelLabel = 'Listado de compras';
     public static function form(Form $form): Form
     {
         return $form
@@ -45,7 +50,7 @@ class ComprasResource extends Resource
                                                 Forms\Components\Select::make('id_proveedor')
                                                     ->label('Proveedor')
                                                     ->placeholder('Seleccione un proveedor')
-                                                    ->relationship('proveedor', 'nombre')
+                                                    ->relationship('Proveedores', 'nombre')
                                                     ->searchable()
                                                     ->preload()
                                                     ->required()
@@ -59,7 +64,7 @@ class ComprasResource extends Resource
                                                 Forms\Components\Select::make('id_producto')
                                                     ->label('Producto')
                                                     ->placeholder('Seleccione un producto')
-                                                    ->relationship('producto', 'nombre')
+                                                    ->relationship('Productos', 'nombre')
                                                     ->searchable()
                                                     ->preload()
                                                     ->required()
@@ -160,6 +165,7 @@ class ComprasResource extends Resource
             ->columns(1);
     }
 
+
     public static function table(Table $table): Table
     {
         return $table
@@ -248,8 +254,7 @@ class ComprasResource extends Resource
                 Tables\Actions\RestoreBulkAction::make()
                     ->color('success')
                     ->label('Restaurar registros')
-                    ->tooltip('Restaurar compras')
-                ,
+                    ->tooltip('Restaurar compras'),
 
                 // Borrado definitivo multiple de datos eliminados logícamente
                 Tables\Actions\ForceDeleteBulkAction::make()

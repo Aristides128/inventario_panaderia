@@ -22,11 +22,17 @@ class Compras extends Model
     {
         return $this->belongsTo(DetalleCompras::class, 'id_detalle_compra');
     }
-    public function proveedor()
+    public function Proveedores()
     {
         return $this->belongsTo(Proveedores::class, 'id_proveedor');
     }
-    public function sucursal()
+
+    public function Productos()
+    {
+        return $this->belongsTo(Productos::class, 'id_producto');
+    }
+  
+    public function Sucursales()
     {
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }

@@ -21,4 +21,5 @@ class DetalleCompras extends Model
         'subtotal',
         'fecha_vencimiento',
     ];
+ 
 }

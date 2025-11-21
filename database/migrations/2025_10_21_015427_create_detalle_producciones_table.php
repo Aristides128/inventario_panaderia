@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-  Schema::create('detalleproducciones', function (Blueprint $table) {
+  Schema::create('detalle_producciones', function (Blueprint $table) {
             $table->id('id_detalle');
             $table->foreignId('id_produccion')->constrained('producciones', 'id_produccion')->onDelete('cascade');
             $table->foreignId('id_producto')->constrained('productos', 'id_producto')->onDelete('cascade');
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-    }
+    }   
 
     /**
      * Reverse the migrations.

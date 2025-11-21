@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\DetalleEnvio;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -17,18 +18,22 @@ class Envios extends Model
         'fecha_envio',
     ];
 
-    public function sucursal_origen()
+    public function Sucursal()
     {
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }
+    public function Productos()
+    {
+        return $this->belongsTo(Productos::class, 'id_producto');
+    }
 
-    public function sucursal_destino()
+    public function Sucursal_destino()
     {
         return $this->belongsTo(Sucursales::class, 'sucursal_destino_id');
     }
 
-    public function detalle_envios()
+    public function Detalle_envios()
     {
-        return $this->hasMany(detalle_envios::class, 'id_envio');
+        return $this->hasMany(DetalleEnvio::class, 'id_envio');
     }
 }

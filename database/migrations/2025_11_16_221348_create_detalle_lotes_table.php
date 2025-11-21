@@ -11,9 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('detalle_lotes', function (Blueprint $table) {
-            $table->id('id_detalle');
-            $table->foreignId('id_lote')->constrained('lotes')->onDelete('cascade');
-            $table->foreignId('id_producto')->constrained('productos')->onDelete('cascade');
+            $table->id('id_detalle_lote');
+            $table->foreignId('id_lote')->constrained('lotes', 'id_lote')->onDelete('cascade');
+            $table->foreignId('id_producto')->constrained('productos', 'id_producto')->onDelete('cascade');
             $table->integer('cantidad')->default(0);
             $table->date('fecha_vencimiento')->nullable();
             $table->timestamps();

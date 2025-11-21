@@ -28,6 +28,8 @@ class AdminPanelProvider extends PanelProvider
             ->registration()
             ->passwordReset()
             ->emailVerification()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling(interval: 5000)
             ->profile()
             ->brandName('Inventario panaderia')
             ->brandLogo(asset('storage/images/Panaderia-francesa.png'))

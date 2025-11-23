@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Components\Repeater;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
@@ -23,82 +24,148 @@ class EnviosResource extends Resource
 
     protected static ?string $navigationGroup = "🚚 Gestión de envíos";
 
-    protected static ?string $modelLabel = 'nuevo envio' ;
+    protected static ?string $modelLabel = 'nuevo envio';
     protected static ?string $pluralModelLabel = 'Listado de envios';
 
     protected static ?int $navigationSort = 2;
-protected static ?string $view = '';
+    protected static ?string $view = '';
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Card::make()
-                    ->schema([
-                        Forms\Components\Repeater::make('envios')
+                Forms\Components\Tabs::make('Tabs')
+                    ->tabs([
+
+
+                        // Datos generales del envío
+                        Forms\Components\Tabs\Tab::make('Datos del Envío')
+                            ->icon('heroicon-o-truck')
                             ->schema([
                                 Forms\Components\Grid::make(2)
                                     ->schema([
-                                        Forms\Components\Select::make('id_producto')
-                                            ->required()
-                                            ->searchable()
-                                            ->prefixIcon('heroicon-o-shopping-bag')
-                                            ->hint('Seleccione un producto')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->relationship('Productos', 'nombre')
-                                            ->preload(),
+                                        Forms\Components\Card::make()
+                                            ->schema([
+                                                Forms\Components\Select::make('id_sucursal')
+                                                    ->label('Sucursal Origen')
+                                                    ->relationship('Sucursales', 'nombre')
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->required()
+                                                    ->columnSpanFull(),
+                                            ]),
 
-                                        Forms\Components\Select::make('id_sucursal')
-                                            ->required()
-                                            ->searchable()
-                                            ->hint('Seleccione una sucursal')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->prefixIcon('heroicon-o-building-storefront')
-                                            ->relationship('Sucursal', 'nombre')
-                                            ->preload(),
+                                        Forms\Components\Card::make()
+                                            ->schema([
+                                                Forms\Components\Select::make('sucursal_destino_id')
+                                                    ->label('Sucursal Destino')
+                                                    ->relationship('Sucursales', 'nombre')
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->required()
+                                                    ->columnSpanFull(),
+                                            ]),
+                                    ]),
 
-                                        Forms\Components\Select::make('sucursal_destino_id')
-                                            ->required()
-                                            ->searchable()
-                                            ->hint('Seleccione una sucursal destino')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->prefixIcon('heroicon-o-building-storefront')
-                                            ->relationship('Sucursal_destino', 'nombre')
-                                            ->preload(),
+                                Forms\Components\Card::make()
+                                    ->schema([
+                                        Forms\Components\Grid::make(2)
+                                            ->schema([
+                                                DatePicker::make('fecha_envio')
+                                                    ->label('Fecha de envío')
+                                                    ->required()
+                                                    ->default(now())
+                                                    ->closeOnDateSelection()
+                                                    ->native(false)
+                                                    ->minDate(now()),
 
-                                        Forms\Components\TextInput::make('cantidad')
-                                            ->label('Cantidad de productos')
-                                            ->placeholder('Cantidad a enviar')
-                                            ->hint('Cantidad de productos a enviar')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->prefixIcon('heroicon-o-clipboard-document-list')
-                                            ->required()
-                                            ->numeric()
-                                            ->default(0),
+                                                \Filament\Forms\Components\TimePicker::make('hora_envio')
+                                                    ->label('Hora de envío')
+                                                    ->default(now())
+                                                    ->native(false)
+                                                    ->seconds(false)
+                                                    ->displayFormat('h:i A')
+                                                    ->format('h:i A')
+                                                    ->required(),
+                                            ]),
+                                    ]),
 
-                                        Forms\Components\DatePicker::make('fecha_vencimiento')
-                                            ->label('Fecha de vencimiento')
-                                            ->hint('Fecha de vencimiento del producto')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->prefixIcon('heroicon-o-calendar')
-                                            ->required(),
-
+                                Forms\Components\Card::make()
+                                    ->schema([
                                         Forms\Components\Textarea::make('observaciones')
-                                            ->placeholder('Observaciones del envío')
-                                            ->maxLength(255)
+                                            ->label('Observaciones')
+                                            ->placeholder('Ingrese cualquier observación relevante sobre el envío')
+                                            ->helperText('Ej: Productos frágiles, horario de entrega preferente, etc.')
+                                            ->required()
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
+
+                        // Segundo paso
+                        Forms\Components\Tabs\Tab::make('Productos a enviar')
+                            ->icon('heroicon-o-cube')
+                            ->schema([
+
+                                Forms\Components\Card::make()
+                                    ->schema([
+                                        Forms\Components\Repeater::make('envios')
+                                            ->schema([
+                                                Forms\Components\Grid::make(2)
+                                                    ->schema([
+                                                        Forms\Components\Select::make('id_producto')
+                                                            ->required()
+                                                            ->searchable()
+                                                            ->prefixIcon('heroicon-o-shopping-bag')
+                                                            ->placeholder('Seleccione un producto')
+                                                            ->hintIcon('heroicon-m-information-circle')
+                                                            ->relationship('Productos', 'nombre')
+                                                            ->preload(),
+
+                                                        Forms\Components\TextInput::make('cantidad')
+                                                            ->label('Cantidad de productos')
+                                                            ->placeholder('Cantidad a enviar')
+                                                            ->hint('Cantidad de productos a enviar')
+                                                            ->hintIcon('heroicon-m-information-circle')
+                                                            ->prefixIcon('heroicon-o-clipboard-document-list')
+                                                            ->required()
+                                                            ->numeric()
+                                                            ->default(0),
+
+                                                        Forms\Components\DatePicker::make('fecha_vencimiento')
+                                                            ->label('Fecha de vencimiento')
+                                                            ->default(now())
+                                                            ->native(false)
+                                                            ->hint('Fecha de vencimiento del producto')
+                                                            ->hintIcon('heroicon-m-information-circle')
+                                                            ->prefixIcon('heroicon-o-calendar')
+                                                            ->default(now())
+                                                            ->required()
+                                                            ->native(false),
+
+                                                    ])
+                                            ])
+                                            ->createItemButtonLabel('Agregar otro envío')
+                                            ->defaultItems(2)
+                                            ->addActionLabel('Agregar otro envío')
+                                            ->columns(1)
                                             ->columnSpanFull()
-                                            ->default(null),
-                                    ])
-                            ])
-                            ->createItemButtonLabel('Agregar otro envío')
-                            ->defaultItems(2)
-                            ->addActionLabel('Agregar otro envío')
-                            ->columns(1)
-                            ->columnSpanFull()
-                            ->collapsible(),
-                          
+                                            ->collapsible(),
+
+                                    ]),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Generar reporte de envio')
+                            ->icon('heroicon-o-cube')
+                            ->schema([
+
+
+
+                            ]),
                     ])
-                    
-            ]);
+                    ->columnSpan('full')
+                    ->persistTabInQueryString(),
+
+            ])
+            ->columns(1);
     }
 
     public static function table(Table $table): Table

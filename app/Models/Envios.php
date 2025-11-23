@@ -18,7 +18,7 @@ class Envios extends Model
         'fecha_envio',
     ];
 
-    public function Sucursal()
+    public function Sucursales()
     {
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }
@@ -27,13 +27,5 @@ class Envios extends Model
         return $this->belongsTo(Productos::class, 'id_producto');
     }
 
-    public function Sucursal_destino()
-    {
-        return $this->belongsTo(Sucursales::class, 'sucursal_destino_id');
-    }
-
-    public function Detalle_envios()
-    {
-        return $this->hasMany(DetalleEnvio::class, 'id_envio');
-    }
+  
 }

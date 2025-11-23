@@ -12,8 +12,6 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
-use Symfony\Contracts\Service\Attribute\Required;
-
 
 class CategoriasResource extends Resource
 {
@@ -120,7 +118,7 @@ class CategoriasResource extends Resource
                     ->tooltip('Ver categoría')
                     ->icon('heroicon-o-eye')
                     ->color('primary'),
-                    
+
                 Tables\Actions\EditAction::make()
                     ->label('Editar')
                     ->color('success')
@@ -183,6 +181,7 @@ class CategoriasResource extends Resource
             //
         ];
     }
+
 
     public static function getPages(): array
     {

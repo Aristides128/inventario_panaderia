@@ -65,11 +65,11 @@ class ProductosResource extends Resource
                                     ->prefixIcon('heroicon-o-user')
                                     ->options([
                                         'unidad' => 'Unidad',
-                                        'kg' => 'Kilogramos (kg)',
-                                        'g' => 'Gramos (g)',
-                                        'pz' => 'Piezas (pz)',
-                                        'l' => 'Litros (l)',
-                                        'ml' => 'Mililitros (ml)'
+                                        'kilogramo' => 'Kilogramos (kg)',
+                                        'libra' => 'Libras (lb)',
+                                        'onza' => 'Onzas (oz)',
+                                        'gramo' => 'Gramos (g)',
+                                        'litro' => 'Litros (l)',
                                     ])
                                     ->default('unidad')
                                     ->required(),

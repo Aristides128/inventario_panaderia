@@ -10,6 +10,9 @@ use App\Models\Proveedores;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\RestoreAction;
@@ -37,9 +40,47 @@ class ComprasResource extends Resource
             ->schema([
                 Forms\Components\Tabs::make('Tabs')
                     ->tabs([
+                        Forms\Components\Tabs\Tab::make('Datos Generales')
+                        ->icon('heroicon-o-cube')
+                        ->schema([
+                            Forms\Components\Card::make()
+                            ->schema([
+                                DatePicker::make('fecha_compra')
+                                ->label('Fecha de la compra')
+                                ->placeholder('Ingrese fecha de la compra')
+                                ->prefixIcon('heroicon-o-calendar')
+                                ->hint('Fecha de la compra')
+                                ->hintIcon('heroicon-m-information-circle')
+                                ->columnSpan(['md' => 2])
+                                ->required()
+                                ->closeOnDateSelection()
+                                ->default(now())
+                                ->native(false),
+
+                                Select::make('id_sucursal')
+                                ->label('Sucursal a realizar la compra')
+                                ->placeholder('Seleccione una sucursal')
+                                ->relationship('Sucursales', 'nombre')
+                                ->searchable()  
+                                ->preload()
+                                ->required(),
+
+                                Select::make('estado_compra')
+                                ->label('Estado de la compra')
+                                ->placeholder('Seleccione el estado de la compra')
+                                ->options([
+                                    'pendiente' => 'Pendiente a recibir',
+                                    'completada' => 'Pedido recibido',
+                                    'cancelada' => 'Pedido cancelado',
+                                ])
+                                ->default('pendiente')
+                                ->required(),
+
+                            ])
+                        ]),
 
                         // Pestaña de Productos
-                        Forms\Components\Tabs\Tab::make('Productos')
+                        Forms\Components\Tabs\Tab::make('Agregar Productos')
                             ->icon('heroicon-o-shopping-bag')
                             ->schema([
                                 Forms\Components\Card::make()
@@ -87,13 +128,13 @@ class ComprasResource extends Resource
 
                                                 Forms\Components\TextInput::make('cantidad')
                                                     ->label('Cantidad de productos')
-                                                    ->placeholder('Ingrese la cantidad')
+                                                    ->placeholder('Ingrese la cantidad que contiene cada paquete')
                                                     ->numeric()
                                                     ->default(1)
                                                     ->minValue(1)
                                                     ->required()
                                                     ->reactive()
-                                                    ->hint('Cantidad de productos para calcular el precio total')
+                                                    ->hint('Cantidad de productos por cada paquete. Asegúrese de que sea un valor mayor a 0 para calcular el precio total')
                                                     ->hintIcon('heroicon-m-information-circle')
                                                     ->prefixIcon('heroicon-o-clipboard-document-list')
                                                     ->afterStateUpdated(function ($state, callable $set, $get) {
@@ -135,10 +176,13 @@ class ComprasResource extends Resource
                                                     ->label('Fecha de vencimiento')
                                                     ->columnSpan(['md' => 1])
                                                     ->minDate(now())
+                                                    ->placeholder('Ingrese fecha de vencimiento')
                                                     ->displayFormat('d/m/Y')
                                                     ->hint('Requerido para productos perecederos')
                                                     ->hintIcon('heroicon-m-information-circle')
-                                                    ->prefixIcon('heroicon-o-calendar'),
+                                                    ->prefixIcon('heroicon-o-calendar')
+                                                    ->closeOnDateSelection()
+                                                    ->native(false),
                                             ])
                                             ->columns(2)
                                             ->createItemButtonLabel('Agregar producto')
@@ -150,19 +194,55 @@ class ComprasResource extends Resource
                                                 $producto = $state['id_producto'] ? Productos::find($state['id_producto']) : null;
                                                 $proveedor = $state['id_proveedor'] ? Proveedores::find($state['id_proveedor']) : null;
 
-                                                $nombreProducto = $producto?->nombre ?? 'Producto no seleccionado';
+                                                $nombreProducto = $producto?->nombre ?? ' Producto no seleccionado: ';
                                                 $nombreProveedor = $proveedor?->nombre ? " ({$proveedor->nombre})" : '';
 
-                                                return $nombreProducto . $nombreProveedor . ' x' . ($state['cantidad'] ?? 1);
+                                                return  $nombreProducto . ' ' . $nombreProveedor . ' ' . ($state['cantidad'] ?? 1);
                                             })
                                             ->columnSpan('full'),
                                     ]),
-                            ])
+            
+                    
+
+                                ]),
+                                
+                                Forms\Components\Tabs\Tab::make('Resumen de la compra')
+                                ->icon('heroicon-o-document-text')
+                                ->schema([
+                                    Forms\Components\Card::make()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('total_compra')
+                                            ->label('Precio total de la compra')
+                                            ->numeric()
+                                            ->readonly()
+                                            ->disabled()
+                                            ->reactive()
+                                            ->hint('Total compra')
+                                            ->hintColor('primary')
+                                            ->hintIcon('heroicon-m-information-circle')
+                                            ->prefixIcon('heroicon-o-currency-dollar'),
+                                    ]),
+                                    Forms\Components\Textarea::make('observaciones')
+                                    ->label('Observaciones')
+                                    ->hint('Observaciones de la compra')
+
+                                    ->hintColor('primary')
+                                    ->hintIcon('heroicon-m-information-circle')
+                               
+
+                    ]),
+                             
+
                     ])
                     ->columnSpan('lg')
                     ->persistTabInQueryString()
+
+                 
+                   
             ])
             ->columns(1);
+
+            
     }
 
 

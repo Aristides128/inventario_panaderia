@@ -14,7 +14,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
-use Schema;
+use App\Models\Productos;
 
 class EnviosResource extends Resource
 {
@@ -38,7 +38,7 @@ class EnviosResource extends Resource
 
 
                         // Datos generales del envío
-                        Forms\Components\Tabs\Tab::make('Datos del Envío')
+                        Forms\Components\Tabs\Tab::make('Datos_envio')
                             ->icon('heroicon-o-truck')
                             ->schema([
                                 Forms\Components\Grid::make(2)
@@ -49,6 +49,11 @@ class EnviosResource extends Resource
                                                     ->label('Sucursal Origen')
                                                     ->relationship('Sucursales', 'nombre')
                                                     ->searchable()
+                                                    ->prefixIcon('heroicon-o-truck')
+
+                                                    ->hint('Ingrese sucursal de origen')
+                                                    ->hintIcon('heroicon-m-information-circle')
+                                                    ->hintColor('primary')
                                                     ->preload()
                                                     ->required()
                                                     ->columnSpanFull(),
@@ -60,6 +65,12 @@ class EnviosResource extends Resource
                                                     ->label('Sucursal Destino')
                                                     ->relationship('Sucursales', 'nombre')
                                                     ->searchable()
+                                                    ->prefixIcon('heroicon-o-truck')
+
+                                                    ->hint('Ingrese sucursal de destino')
+                                                    ->hintColor('primary')
+                                                    ->hintIcon('heroicon-m-information-circle')
+
                                                     ->preload()
                                                     ->required()
                                                     ->columnSpanFull(),
@@ -73,19 +84,14 @@ class EnviosResource extends Resource
                                                 DatePicker::make('fecha_envio')
                                                     ->label('Fecha de envío')
                                                     ->required()
+                                                    ->prefixIcon('heroicon-o-calendar')
                                                     ->default(now())
                                                     ->closeOnDateSelection()
+                                                    ->hint('Ingrese fecha de envio')
+                                                    ->hintColor('primary')
+                                                    ->hintIcon('heroicon-m-information-circle')
                                                     ->native(false)
                                                     ->minDate(now()),
-
-                                                \Filament\Forms\Components\TimePicker::make('hora_envio')
-                                                    ->label('Hora de envío')
-                                                    ->default(now())
-                                                    ->native(false)
-                                                    ->seconds(false)
-                                                    ->displayFormat('h:i A')
-                                                    ->format('h:i A')
-                                                    ->required(),
                                             ]),
                                     ]),
 
@@ -93,6 +99,9 @@ class EnviosResource extends Resource
                                     ->schema([
                                         Forms\Components\Textarea::make('observaciones')
                                             ->label('Observaciones')
+                                            ->hint('Ingrese sucursal de destino')
+                                            ->hintColor('primary')
+                                            ->hintIcon('heroicon-m-information-circle')
                                             ->placeholder('Ingrese cualquier observación relevante sobre el envío')
                                             ->helperText('Ej: Productos frágiles, horario de entrega preferente, etc.')
                                             ->required()
@@ -101,10 +110,9 @@ class EnviosResource extends Resource
                             ]),
 
                         // Segundo paso
-                        Forms\Components\Tabs\Tab::make('Productos a enviar')
+                        Forms\Components\Tabs\Tab::make('Productos')
                             ->icon('heroicon-o-cube')
                             ->schema([
-
                                 Forms\Components\Card::make()
                                     ->schema([
                                         Forms\Components\Repeater::make('envios')
@@ -112,12 +120,13 @@ class EnviosResource extends Resource
                                                 Forms\Components\Grid::make(2)
                                                     ->schema([
                                                         Forms\Components\Select::make('id_producto')
+                                                        ->label('Productos disponibles')
                                                             ->required()
                                                             ->searchable()
                                                             ->prefixIcon('heroicon-o-shopping-bag')
                                                             ->placeholder('Seleccione un producto')
                                                             ->hintIcon('heroicon-m-information-circle')
-                                                            ->relationship('Productos', 'nombre')
+                                                            ->options(Productos::all()->pluck('nombre', 'id_producto'))
                                                             ->preload(),
 
                                                         Forms\Components\TextInput::make('cantidad')
@@ -128,18 +137,7 @@ class EnviosResource extends Resource
                                                             ->prefixIcon('heroicon-o-clipboard-document-list')
                                                             ->required()
                                                             ->numeric()
-                                                            ->default(0),
-
-                                                        Forms\Components\DatePicker::make('fecha_vencimiento')
-                                                            ->label('Fecha de vencimiento')
-                                                            ->default(now())
-                                                            ->native(false)
-                                                            ->hint('Fecha de vencimiento del producto')
-                                                            ->hintIcon('heroicon-m-information-circle')
-                                                            ->prefixIcon('heroicon-o-calendar')
-                                                            ->default(now())
-                                                            ->required()
-                                                            ->native(false),
+                                                            ->default(0)
 
                                                     ])
                                             ])
@@ -259,7 +257,9 @@ class EnviosResource extends Resource
                     ->label('Borrar registros definitivamente')
                     ->tooltip('Borrar definitivamente envío')
 
-            ]);
+            ])
+            ->recordUrl(null)
+            ->recordAction(null);
     }
 
     public static function getRelations(): array

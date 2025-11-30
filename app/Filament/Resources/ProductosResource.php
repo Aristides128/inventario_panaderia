@@ -100,9 +100,8 @@ class ProductosResource extends Resource
                     ->sortable()
                     ->icon('heroicon-o-building-storefront')
                     ->iconColor('primary')
-                    ->description(fn(Productos $record): string => $record->categoria->nombre ?: 'Sin producto')
-                    ->wrap()
-                ,
+                    // ->description(fn(Productos $record): string => $record->categoria->nombre ?: 'Sin producto')
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('descripcion')
                     ->label('Descripción')
                     ->searchable(),
@@ -115,7 +114,7 @@ class ProductosResource extends Resource
                     ->label('Unidad de Medida')
                     ->searchable()
                     ->sortable(),
-               Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
@@ -139,7 +138,7 @@ class ProductosResource extends Resource
             ])
             ->actions([
 
-                 Tables\Actions\ViewAction::make()
+                Tables\Actions\ViewAction::make()
                     ->label('Ver')
                     ->tooltip('Ver Producto')
                     ->icon('heroicon-o-eye')
@@ -198,7 +197,9 @@ class ProductosResource extends Resource
                     ->color('danger')
                     ->label('Borrar registros definitivamente')
                     ->tooltip('Borrar definitivamente Productos')
-            ]);
+            ])
+            ->recordUrl(null)
+            ->recordAction(null);
     }
 
     public static function getRelations(): array

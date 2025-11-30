@@ -12,7 +12,6 @@ class lotes extends Model
     protected $table = 'lotes';
     protected $primaryKey = 'id_lote';
     protected $fillable = [
-        'id_producto',
         'semana',
         'mes',
         'anio',

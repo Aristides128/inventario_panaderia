@@ -160,7 +160,9 @@ class ProveedoresResource extends Resource
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->color('warning'),
                 ]),
-            ]);
+            ])
+            ->recordUrl(null)
+            ->recordAction(null);
     }
 
     public static function getRelations(): array

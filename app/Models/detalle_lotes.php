@@ -17,12 +17,12 @@ class detalle_lotes extends Model
         'cantidad',
         'fecha_vencimiento',
     ];
-    public function lote()
-    {
-        return $this->belongsTo(lotes::class, 'id_lote');
-    }
-    public function producto()
-    {
-        return $this->belongsTo(Productos::class, 'id_producto');
-    }
+    // public function lote()
+    // {
+    //     return $this->belongsTo(lotes::class, 'id_lote');
+    // }
+    // public function producto()
+    // {
+    //     return $this->belongsTo(Productos::class, 'id_producto');
+    // }
 }

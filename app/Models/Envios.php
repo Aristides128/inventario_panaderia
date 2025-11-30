@@ -22,10 +22,7 @@ class Envios extends Model
     {
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }
-    public function Productos()
-    {
-        return $this->belongsTo(Productos::class, 'id_producto');
-    }
+   
 
   
 }

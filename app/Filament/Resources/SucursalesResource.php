@@ -162,7 +162,9 @@ class SucursalesResource extends Resource
                     ->color('danger')
                     ->label('Borrar registros definitivamente')
                     ->tooltip('Borrar definitivamente sucursales')
-            ]);
+            ])
+            ->recordUrl(null)
+            ->recordAction(null);
     }
 
     public static function getRelations(): array

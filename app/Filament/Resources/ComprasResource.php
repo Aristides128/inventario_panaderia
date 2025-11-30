@@ -32,7 +32,7 @@ class ComprasResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
-    protected static ?string $modelLabel = 'nueva compra' ;
+    protected static ?string $modelLabel = 'nueva compra';
     protected static ?string $pluralModelLabel = 'Listado de compras';
     public static function form(Form $form): Form
     {
@@ -40,44 +40,43 @@ class ComprasResource extends Resource
             ->schema([
                 Forms\Components\Tabs::make('Tabs')
                     ->tabs([
-                        Forms\Components\Tabs\Tab::make('Datos Generales')
-                        ->icon('heroicon-o-cube')
-                        ->schema([
-                            Forms\Components\Card::make()
+                        Forms\Components\Tabs\Tab::make('Datos')
+                            ->icon('heroicon-o-cube')
                             ->schema([
-                                DatePicker::make('fecha_compra')
-                                ->label('Fecha de la compra')
-                                ->placeholder('Ingrese fecha de la compra')
-                                ->prefixIcon('heroicon-o-calendar')
-                                ->hint('Fecha de la compra')
-                                ->hintIcon('heroicon-m-information-circle')
-                                ->columnSpan(['md' => 2])
-                                ->required()
-                                ->closeOnDateSelection()
-                                ->default(now())
-                                ->native(false),
+                                Forms\Components\Card::make('Datos generales')
+                                    ->schema([
+                                        DatePicker::make('fecha_compra')
+                                            ->label('Fecha de la compra')
+                                            ->placeholder('Ingrese fecha de la compra')
+                                            ->prefixIcon('heroicon-o-calendar')
+                                            ->hint('Fecha de la compra')
+                                            ->hintIcon('heroicon-m-information-circle')
+                                            ->columnSpan(['md' => 2])
+                                            ->required()
+                                            ->closeOnDateSelection()
+                                            ->default(now())
+                                            ->native(false),
 
-                                Select::make('id_sucursal')
-                                ->label('Sucursal a realizar la compra')
-                                ->placeholder('Seleccione una sucursal')
-                                ->relationship('Sucursales', 'nombre')
-                                ->searchable()  
-                                ->preload()
-                                ->required(),
+                                        Select::make('id_sucursal')
+                                            ->label('Sucursal a realizar la compra')
+                                            ->placeholder('Seleccione una sucursal')
+                                            ->relationship('Sucursales', 'nombre')
+                                            ->searchable()
+                                            ->preload()
+                                            ->required(),
 
-                                Select::make('estado_compra')
-                                ->label('Estado de la compra')
-                                ->placeholder('Seleccione el estado de la compra')
-                                ->options([
-                                    'pendiente' => 'Pendiente a recibir',
-                                    'completada' => 'Pedido recibido',
-                                    'cancelada' => 'Pedido cancelado',
-                                ])
-                                ->default('pendiente')
-                                ->required(),
-
-                            ])
-                        ]),
+                                        Select::make('estado_compra')
+                                            ->label('Estado de la compra')
+                                            ->placeholder('Seleccione el estado de la compra')
+                                            ->options([
+                                                'pendiente' => 'Pendiente a recibir',
+                                                'Recibido' => 'Pedido recibido',
+                                                'cancelado' => 'Pedido cancelado',
+                                            ])
+                                            ->default('pendiente')
+                                            ->required(),
+                                    ])
+                            ]),
 
                         // Pestaña de Productos
                         Forms\Components\Tabs\Tab::make('Agregar Productos')
@@ -85,13 +84,14 @@ class ComprasResource extends Resource
                             ->schema([
                                 Forms\Components\Card::make()
                                     ->schema([
-                                        Forms\Components\Repeater::make('productos')
+                                        Forms\Components\Repeater::make('Produccion')
+                                            
                                             ->label('')
                                             ->schema([
-                                                Forms\Components\Select::make('id_proveedor')
-                                                    ->label('Proveedor')
+                                                Forms\Components\Select::make('proveedor')
+                                                    ->label('Proveedor del producto')
                                                     ->placeholder('Seleccione un proveedor')
-                                                    ->relationship('Proveedores', 'nombre')
+                                                    ->options(Proveedores::all()->pluck('nombre', 'id_proveedor'))
                                                     ->searchable()
                                                     ->preload()
                                                     ->required()
@@ -103,9 +103,9 @@ class ComprasResource extends Resource
 
 
                                                 Forms\Components\Select::make('id_producto')
-                                                    ->label('Producto')
+                                                    ->label('Producto disponibles')
                                                     ->placeholder('Seleccione un producto')
-                                                    ->relationship('Productos', 'nombre')
+                                                     ->options(Productos::all()->pluck('nombre', 'id_producto'))
                                                     ->searchable()
                                                     ->preload()
                                                     ->required()
@@ -126,7 +126,7 @@ class ComprasResource extends Resource
                                                     ->prefixIcon('heroicon-o-clipboard-document-list')
                                                     ->columnSpan(['md' => 1]),
 
-                                                Forms\Components\TextInput::make('cantidad')
+                                                Forms\Components\TextInput::make('cantidad_producto')
                                                     ->label('Cantidad de productos')
                                                     ->placeholder('Ingrese la cantidad que contiene cada paquete')
                                                     ->numeric()
@@ -139,12 +139,12 @@ class ComprasResource extends Resource
                                                     ->prefixIcon('heroicon-o-clipboard-document-list')
                                                     ->afterStateUpdated(function ($state, callable $set, $get) {
                                                         $cantidad = max(1, (float) $state);
-                                                        $set('cantidad', $cantidad);
+                                                        $set('cantidad_producto', $cantidad);
                                                         $set('precio_total', ($get('precio_unitario') ?? 0) * $cantidad);
                                                     })
                                                     ->afterStateHydrated(function (callable $set, $state) {
                                                         if ((float) $state < 1)
-                                                            $set('cantidad', 1);
+                                                            $set('cantidad_producto', 1);
                                                     })
                                                     ->columnSpan(['md' => 1]),
 
@@ -160,11 +160,11 @@ class ComprasResource extends Resource
                                                     ->hintIcon('heroicon-m-information-circle')
                                                     ->prefixIcon('heroicon-o-currency-dollar')
                                                     ->afterStateUpdated(function ($state, callable $set, $get) {
-                                                        $set('precio_total', $state * ($get('cantidad') ?? 1));
+                                                        $set('precio_total', $state * ($get('cantidad_producto') ?? 1));
                                                     })
                                                     ->columnSpan(['md' => 1]),
 
-                                                Forms\Components\TextInput::make('precio_total')
+                                                Forms\Components\TextInput::make('subtotal')
                                                     ->label('Total (Q)')
                                                     ->placeholder('Precio total calculado automáticamente')
                                                     ->numeric()
@@ -192,24 +192,24 @@ class ComprasResource extends Resource
                                             ->collapsible()
                                             ->itemLabel(function (array $state): string {
                                                 $producto = $state['id_producto'] ? Productos::find($state['id_producto']) : null;
-                                                $proveedor = $state['id_proveedor'] ? Proveedores::find($state['id_proveedor']) : null;
+                                                $proveedor = $state['proveedor'] ? Proveedores::find($state['proveedor']) : null;
 
                                                 $nombreProducto = $producto?->nombre ?? ' Producto no seleccionado: ';
                                                 $nombreProveedor = $proveedor?->nombre ? " ({$proveedor->nombre})" : '';
 
-                                                return  $nombreProducto . ' ' . $nombreProveedor . ' ' . ($state['cantidad'] ?? 1);
+                                                return $nombreProducto . ' ' . $nombreProveedor . ' ' . ($state['cantidad'] ?? 1);
                                             })
                                             ->columnSpan('full'),
                                     ]),
-            
-                    
 
-                                ]),
-                                
-                                Forms\Components\Tabs\Tab::make('Resumen de la compra')
-                                ->icon('heroicon-o-document-text')
-                                ->schema([
-                                    Forms\Components\Card::make()
+
+
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Resumen')
+                            ->icon('heroicon-o-document-text')
+                            ->schema([
+                                Forms\Components\Card::make()
                                     ->schema([
                                         Forms\Components\TextInput::make('total_compra')
                                             ->label('Precio total de la compra')
@@ -222,27 +222,27 @@ class ComprasResource extends Resource
                                             ->hintIcon('heroicon-m-information-circle')
                                             ->prefixIcon('heroicon-o-currency-dollar'),
                                     ]),
-                                    Forms\Components\Textarea::make('observaciones')
+                                Forms\Components\Textarea::make('observaciones')
                                     ->label('Observaciones')
                                     ->hint('Observaciones de la compra')
-
+                                    ->placeholder('Ingrese observaciones durante la compra ')
                                     ->hintColor('primary')
                                     ->hintIcon('heroicon-m-information-circle')
-                               
 
-                    ]),
-                             
+
+                            ]),
+
 
                     ])
                     ->columnSpan('lg')
                     ->persistTabInQueryString()
 
-                 
-                   
+
+
             ])
             ->columns(1);
 
-            
+
     }
 
 
@@ -250,29 +250,24 @@ class ComprasResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id_producto')
-                    ->label('Producto')
-                    ->numeric()
+            
+                Tables\Columns\TextColumn::make('fecha_compra')
+                    ->label('Fecha de compra')
+                    ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('id_proveedor')
-                    ->label('Proveedor')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('Sucursales.nombre')
+                    ->label('Sucursal')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('cantidad_producto')
-                    ->label('Cantidad de Producto')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('precio_total')
-                    ->label('Precio Total')
+                Tables\Columns\TextColumn::make('total')
+                    ->label('Precio total de la compra')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('estado_compra')
-                    ->label('Estado de la Compra')
+                    ->label('Estado de la compra')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('fecha_vencimiento')
-                    ->date()
-                    ->sortable(),
+             
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime()
@@ -341,7 +336,9 @@ class ComprasResource extends Resource
                     ->color('danger')
                     ->label('Borrar registros definitivamente')
                     ->tooltip('Borrar definitivamente compras')
-            ]);
+            ])
+            ->recordUrl(null)
+            ->recordAction(null);
     }
 
     public static function getRelations(): array

@@ -172,7 +172,9 @@ class CategoriasResource extends Resource
                     ->label('Borrar registros definitivamente')
                     ->tooltip('Borrar definitivamente categoría')
 
-            ]);
+            ])
+            ->recordUrl(null)
+            ->recordAction(null);
     }
 
     public static function getRelations(): array

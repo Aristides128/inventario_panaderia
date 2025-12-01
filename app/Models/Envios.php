@@ -23,6 +23,4 @@ class Envios extends Model
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }
    
-
-  
 }

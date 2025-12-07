@@ -24,37 +24,51 @@ class DetalleProduccionesResource extends Resource
     {
         return $form
             ->schema([
-                    Forms\Components\Card::make()
-                        ->schema([
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
                                 Forms\Components\Select::make('id_produccion')
                                     ->label('Producción')
                                     ->placeholder('Seleccione una producción')
+                                    ->relationship('Produccion', 'observaciones')
                                     ->prefixIcon('heroicon-o-calendar')
-                                    ->hint('Ingrese producción')
-                                    ->hintIcon('heroicon-o-calendar')
+                                    ->hint('Seleccione la producción asociada')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->searchable()
+                                    ->preload()
                                     ->required(),
+
                                 Forms\Components\Select::make('id_producto')
-                                    ->label('Productos disponibles')
-                                    ->placeholder('Seleccione producto')
-                                    ->hint('Ingrese producto')
-                                    ->hintIcon('heroicon-o-calendar')
-                                    ->columnSpanFull(),
+                                    ->label('Producto')
+                                    ->relationship('Producto', 'nombre')
+                                    ->placeholder('Seleccione un producto')
+                                    ->prefixIcon('heroicon-o-shopping-bag')
+                                    ->hint('Seleccione el producto utilizado')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(),
 
                                 Forms\Components\TextInput::make('cantidad_utilizada')
-                                    ->required()
-                                    ->label('Cantidad de producto utilizado')
-                                    ->placeholder('Ingrese cantidad')
+                                    ->label('Cantidad Utilizada')
+                                    ->placeholder('Ingrese la cantidad utilizada')
+                                    ->prefixIcon('heroicon-o-clipboard-document-list')
+                                    ->hint('Cantidad de producto utilizado en la producción')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
                                     ->numeric()
-                                    ->hint('Ingrese cantidad utilizada')
-                                    ->hintIcon('heroicon-o-calendar')
-                                    ->default(1),
-                            ])
-                        ->columns(1)
-                        ->columnSpan('lg')
-                        ->extraAttributes(['class' => 'shadow-md']),
-                ])
-            ->columns(1)
-            ->extraAttributes(['class' => 'py-6']);
+                                    ->minValue(1)
+                                    ->default(1)
+                                    ->required()
+                                    ->columnSpan('full'),
+                            ]),
+                    ])
+                    ->columnSpan('lg'),
+            ])
+            ->columns(1);
     }
 
     public static function table(Table $table): Table

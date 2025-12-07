@@ -20,15 +20,13 @@ class DetalleProducciones extends Model
         'cantidad_utilizada',
     ];
 
-    public function produccion()    
+    public function Produccion()    
     {
         return $this->hasMany(Producciones::class, 'id_produccion');
     }
     
-    public function producto()    
+    public function Producto()    
     {
         return $this->belongsTo(Productos::class, 'id_producto');
     }
-    
-   
 }

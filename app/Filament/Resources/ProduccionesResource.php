@@ -31,25 +31,35 @@ class ProduccionesResource extends Resource
             ->schema([
                 Forms\Components\Card::make()
                     ->schema([
-                        Forms\Components\DatePicker::make('fecha_produccion')
-                            ->label('Fecha de producción')
-                            ->prefixIcon('heroicon-o-calendar')
-                            ->hint('Ingrese fecha de producción')
-                            ->hintIcon('heroicon-o-calendar')
-                            ->required(),
-                        Forms\Components\Textarea::make('observaciones')
-                            ->label('observaciones de producción')
-                            ->hint('Ingrese observación de producción')
-                            ->hintIcon('heroicon-o-calendar')
-                            ->placeholder('Ingrese Observación de producción')
-                            ->columnSpanFull(),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\DatePicker::make('fecha_produccion')
+                                    ->label('Fecha de Producción')
+                                    ->placeholder('Seleccione la fecha de producción')
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->hint('Fecha en que se realizó la producción')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->closeOnDateSelection()
+                                    ->default(now())
+                                    ->native(false)
+                                    ->required()
+                                    ->columnSpan('full'),
+
+                                Forms\Components\Textarea::make('observaciones')
+                                    ->label('Observaciones de Producción')
+                                    ->placeholder('Ingrese observaciones sobre la producción')
+                                    ->hint('Detalles adicionales sobre la producción')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->rows(3)
+                                    ->maxLength(255)
+                                    ->columnSpan('full'),
+                            ]),
                     ])
-                    ->columns(1)
-                    ->columnSpan('lg')
-                    ->extraAttributes(['class' => 'shadow-md']),
+                    ->columnSpan('lg'),
             ])
-            ->columns(1)
-            ->extraAttributes(['class' => 'py-6']);
+            ->columns(1);
     }
 
     public static function table(Table $table): Table

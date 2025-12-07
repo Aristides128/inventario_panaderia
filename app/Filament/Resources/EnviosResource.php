@@ -15,6 +15,7 @@ use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
 use App\Models\Productos;
+use App\Models\DetalleEnvio;
 
 class EnviosResource extends Resource
 {
@@ -127,12 +128,33 @@ class EnviosResource extends Resource
                                                             ->placeholder('Seleccione un producto')
                                                             ->hintIcon('heroicon-m-information-circle')
                                                             ->options(Productos::all()->pluck('nombre', 'id_producto'))
+                                                            ->afterStateUpdated(function (callable $set, callable $get, $state) {
+                                                                // Si no hay producto seleccionado, limpiar campos
+                                                                if (!$state) {
+                                                                    $set('cantidad', null);
+                                                                    return;
+                                                                }
+
+                                                                // Buscar el producto seleccionado y obtener su cantidad disponible
+                                                                $producto = Productos::find($state);
+                                                                
+                                                                // Obtener la cantidad total de productos enviados desde detalle_envios
+                                                                $cantidadEnviada = DetalleEnvio::where('id_producto', $state)
+                                                                    ->sum('cantidad');
+                                                                
+                                                                if ($producto) {
+                                                                    $set('cantidad', $producto->cantidad);
+                                                                    
+                                                                    // Actualizar el helper text con la información de envíos
+                                                                    $set('cantidad_enviada_info', $cantidadEnviada);
+                                                                }
+                                                            })
+                                                            ->reactive()
                                                             ->preload(),
 
                                                         Forms\Components\TextInput::make('cantidad')
                                                             ->label('Cantidad de productos')
                                                             ->placeholder('Cantidad a enviar')
-                                                            ->hint('Cantidad de productos a enviar')
                                                             ->hintIcon('heroicon-m-information-circle')
                                                             ->prefixIcon('heroicon-o-clipboard-document-list')
                                                             ->required()

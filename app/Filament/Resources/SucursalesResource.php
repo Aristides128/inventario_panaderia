@@ -32,33 +32,34 @@ class SucursalesResource extends Resource
             ->schema([
                 Forms\Components\Card::make()
                     ->schema([
-                        Forms\Components\TextInput::make('nombre')
-                            ->required()
-                            ->prefixIcon('heroicon-o-truck')
-                            ->label('Nombre de la sucursal')
-                            ->hint('Nombre descriptivo de la sucursal')
-                            ->hintIcon('heroicon-o-information-circle')
-                            ->hintColor('primary')
-                            ->placeholder('Ingrese el nombre de la sucursal')
-                            ->maxLength(100)
-                            ->columnSpanFull(),
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('nombre')
+                                    ->label('Nombre de la Sucursal')
+                                    ->placeholder('Ej: Sucursal Centro, Sucursal Norte...')
+                                    ->prefixIcon('heroicon-o-building-storefront')
+                                    ->hint('Nombre descriptivo de la sucursal')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->columnSpan('full'),
 
-                        Forms\Components\Textarea::make('direccion')
-                            ->required()
-                            ->label('Dirección de la sucursal')
-                            ->hint('Dirección de la sucursal')
-                            ->hintIcon('heroicon-o-information-circle')
-                            ->hintColor('primary')
-                            ->placeholder('Ingrese la dirección de la sucursal')
-                            ->maxLength(255)
-                            ->columnSpanFull(),
+                                Forms\Components\Textarea::make('direccion')
+                                    ->label('Dirección de la Sucursal')
+                                    ->placeholder('Ingrese la dirección completa de la sucursal')
+                                    ->hint('Dirección física de la sucursal')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->required()
+                                    ->rows(3)
+                                    ->maxLength(255)
+                                    ->columnSpan('full'),
+                            ]),
                     ])
-                    ->columns(1)
-                    ->columnSpan('lg')
-                    ->extraAttributes(['class' => 'shadow-md']),
+                    ->columnSpan('lg'),
             ])
-            ->columns(1)
-            ->extraAttributes(['class' => 'py-6']);
+            ->columns(1);
     }
 
 

@@ -20,13 +20,12 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
 use Filament\Tables\Filters\TrashedFilter;
-
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DetalleComprasResource extends Resource
 {
-  protected static ?string $model = DetalleCompras::class;
+  protected static ?string $model = Compras::class;
 
   protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
@@ -91,10 +90,11 @@ class DetalleComprasResource extends Resource
                         Select::make('id_proveedor')
                           ->label('Proveedor del producto')
                           ->placeholder('Seleccione un proveedor')
-                          ->relationship('Proveedores', 'nombre')
+                          ->options(fn() => Proveedores::all()->pluck('nombre', 'id_proveedor'))
                           ->searchable()
                           ->preload()
                           ->required()
+                          ->live()
                           ->hint('Seleccione el proveedor antes de elegir el producto')
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-user')
@@ -105,14 +105,54 @@ class DetalleComprasResource extends Resource
                         Select::make('id_producto')
                           ->label('Producto disponibles')
                           ->placeholder('Seleccione un producto')
-                          ->relationship('Productos', 'nombre')
+                          ->options(fn() => Productos::all()->pluck('nombre', 'id_producto'))
                           ->searchable()
                           ->preload()
                           ->required()
+                          ->live()
                           ->hint('Seleccione un producto para calcular el precio total')
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-shopping-bag')
-
+                          ->afterStateUpdated(function ($state, callable $set, callable $get, $livewire) {
+                            // Solo autocompletar cuando estamos EDITANDO (no al crear)
+                            if (!isset($livewire->record)) {
+                              return; // Estamos creando, no autocompletar
+                            }
+                            
+                            if (!$state) {
+                              // Si no hay producto seleccionado, limpiar campos
+                              $set('id_proveedor', null);
+                              $set('precio_unitario', 1);
+                              $set('cantidad_producto', 1);
+                              $set('cantidad_paquetes', 1);
+                              $set('subtotal', 1);
+                              return;
+                            }
+                            
+                            // Buscar el detalle de este producto en la compra actual
+                            $detalleActual = DetalleCompras::where('id_producto', $state)
+                              ->where('id_compra', $livewire->record->id_compra)
+                              ->first();
+                            
+                            if ($detalleActual) {
+                              // Autocompletar con los datos de esta compra
+                              $set('id_proveedor', $detalleActual->id_proveedor);
+                              $set('precio_unitario', $detalleActual->precio_unitario);
+                              $set('cantidad_producto', $detalleActual->cantidad_producto);
+                              $set('cantidad_paquetes', $detalleActual->cantidad_paquetes ?? 1);
+                              
+                              // Calcular subtotal
+                              $subtotal = $detalleActual->precio_unitario * $detalleActual->cantidad_producto;
+                              $set('subtotal', $subtotal);
+                            } else {
+                              // Si es un producto nuevo en esta compra, valores por defecto
+                              $set('id_proveedor', null);
+                              $set('precio_unitario', 1);
+                              $set('cantidad_producto', 1);
+                              $set('cantidad_paquetes', 1);
+                              $set('subtotal', 1);
+                            }
+                          })
                           ->columnSpan(['md' => 2]),
 
                         Forms\Components\TextInput::make('cantidad_paquetes')
@@ -186,7 +226,6 @@ class DetalleComprasResource extends Resource
                       ])
                       ->columns(2)
                       ->createItemButtonLabel('Agregar producto')
-
                       ->defaultItems(1)
                       ->minItems(1)
                       ->collapsible()
@@ -201,9 +240,6 @@ class DetalleComprasResource extends Resource
                       })
                       ->columnSpan('full'),
                   ]),
-
-
-
               ]),
 
             Forms\Components\Tabs\Tab::make('Resumen')
@@ -266,8 +302,6 @@ class DetalleComprasResource extends Resource
         Tables\Columns\TextColumn::make('estado_compra')
           ->label('Estado de la compra')
           ->sortable(),
-
-
         Tables\Columns\TextColumn::make('created_at')
           ->label('Fecha de Creación')
           ->dateTime()
@@ -286,21 +320,21 @@ class DetalleComprasResource extends Resource
         Tables\Actions\EditAction::make()
           ->label('Editar')
           ->tooltip('Editar compras')
-          ->visible(function (DetalleCompras $record) {
+          ->visible(function (Compras $record) {
             return $record->deleted_at === null;
           })
           ->icon('heroicon-o-pencil'),
 
         RestoreAction::make()
           ->tooltip('Restaurar compras')
-          ->visible(function (DetalleCompras $record) {
+          ->visible(function (Compras $record) {
             return $record->deleted_at !== null;
           }),
 
         Tables\Actions\DeleteAction::make()
           ->label('Eliminar')
           ->tooltip('Eliminar compras')
-          ->visible(function (DetalleCompras $record) {
+          ->visible(function (Compras $record) {
             return $record->deleted_at === null;
           })
           ->icon('heroicon-o-trash'),
@@ -319,7 +353,7 @@ class DetalleComprasResource extends Resource
           ->modalDescription('¿Estás seguro de que deseas eliminar esta compra? Esta acción no se puede deshacer.')
           ->modalSubmitActionLabel('Sí, eliminar')
           ->modalCancelActionLabel('Cancelar')
-          ->action(function (DetalleCompras $record) {
+          ->action(function (Compras $record) {
             $record->forceDelete();
           })
           ->tooltip('Eliminar definitivamente'),

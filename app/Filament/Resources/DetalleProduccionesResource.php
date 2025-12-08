@@ -10,6 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\RestoreAction;
+use Filament\Tables\Actions\ForceDeleteAction;
+use Filament\Tables\Filters\TrashedFilter;
 
 class DetalleProduccionesResource extends Resource
 {
@@ -76,10 +79,8 @@ class DetalleProduccionesResource extends Resource
         return $table
             ->columns([
                     Tables\Columns\TextColumn::make('id_produccion')
-                        ->numeric()
                         ->sortable(),
                     Tables\Columns\TextColumn::make('id_producto')
-                        ->numeric()
                         ->sortable(),
                     Tables\Columns\TextColumn::make('cantidad_utilizada')
                         ->numeric()
@@ -101,13 +102,61 @@ class DetalleProduccionesResource extends Resource
                     //
                 ])
             ->actions([
-                    Tables\Actions\EditAction::make(),
-                ])
+                    Tables\Actions\ViewAction::make()
+                    ->label('Ver')
+                    ->tooltip('Ver envío')
+                    ->icon('heroicon-o-eye')
+                    ->color('primary'),
+
+                Tables\Actions\EditAction::make()
+                    ->label('Editar')
+                    ->tooltip('Editar envío')
+                    ->color('success')
+                    ->visible(function (DetalleProducciones $record) {
+                        return $record->deleted_at === null;
+                    })
+                    ->icon('heroicon-o-pencil'),
+                RestoreAction::make()
+                    ->tooltip('Restaurar envío')
+                    ->visible(function (DetalleProducciones $record) {
+                        return $record->deleted_at !== null;
+                    }),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Eliminar')
+                    ->tooltip('Eliminar envío')
+                    ->color('danger')
+                    ->visible(function (DetalleProducciones $record) {
+                        return $record->deleted_at === null;
+                    }),
+
+                ForceDeleteAction::make()
+                    ->label('Borrar definitivamente')
+                    ->tooltip('Eliminar definitivamente envío')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Eliminar envío?')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar esta envío? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->action(function (Envios $record) {
+                        $record->forceDelete();
+                    }),
+            ])
             ->bulkActions([
-                    Tables\Actions\BulkActionGroup::make([
-                        Tables\Actions\DeleteBulkAction::make(),
-                    ]),
-                ])
+                // Restauración multiple de datos eliminados logícamente
+                Tables\Actions\RestoreBulkAction::make()
+                    ->color('success')
+                    ->label('Restaurar registros')
+                    ->tooltip('Restaurar envío')
+                ,
+
+                // Borrado definitivo multiple de datos eliminados logícamente
+                Tables\Actions\ForceDeleteBulkAction::make()
+                    ->color('danger')
+                    ->label('Borrar registros definitivamente')
+                    ->tooltip('Borrar definitivamente envío')
+
+            ])
             ->recordUrl(null)
             ->recordAction(null);
     }

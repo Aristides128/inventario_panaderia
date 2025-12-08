@@ -27,8 +27,19 @@ class DetalleCompras extends Model
      {
         return $this->belongsTo(Proveedores::class, 'id_proveedor')->withDefault();
     }
+    
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedores::class, 'id_proveedor')->withDefault();
+    }
+    
      public function Productos()
      {
+        return $this->belongsTo(Productos::class, 'id_producto')->withDefault();
+    }
+    
+    public function producto()
+    {
         return $this->belongsTo(Productos::class, 'id_producto')->withDefault();
     }
    

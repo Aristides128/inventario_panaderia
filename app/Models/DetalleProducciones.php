@@ -12,7 +12,7 @@ class DetalleProducciones extends Model
     use SoftDeletes;
 
     protected $table = 'detalle_producciones';
-    protected $primaryKey = 'id_detalle_producciones';
+    protected $primaryKey = 'id_detalle';
 
     protected $fillable = [
         'id_produccion',

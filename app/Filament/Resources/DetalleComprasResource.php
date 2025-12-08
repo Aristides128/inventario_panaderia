@@ -247,34 +247,139 @@ class DetalleComprasResource extends Resource
               ->schema([
                 Forms\Components\Card::make()
                   ->schema([
-                    Forms\Components\TextInput::make('total_compra')
-                      ->label('Precio total de la compra')
-                      ->numeric()
-                      ->readonly()
-                      ->disabled()
-                      ->reactive()
-                      ->hint('Total compra')
-                      ->hintColor('primary')
-                      ->hintIcon('heroicon-m-information-circle')
-                      ->prefixIcon('heroicon-o-currency-dollar'),
-                  ]),
-                Forms\Components\Textarea::make('observaciones')
-                  ->label('Observaciones')
-                  ->hint('Observaciones de la compra')
-                  ->placeholder('Ingrese observaciones durante la compra ')
-                  ->hintColor('primary')
-                  ->hintIcon('heroicon-m-information-circle')
-
-
+                    Forms\Components\Placeholder::make('resumen_titulo')
+                      ->label('')
+                      ->content(new \Illuminate\Support\HtmlString('<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">📋 Resumen de la Compra</h2>'))
+                      ->columnSpanFull(),
+              
+                    // Observaciones
+                    Forms\Components\Card::make()
+                      ->schema([
+                        Forms\Components\Textarea::make('observaciones')
+                          ->label('📝 Observaciones')
+                          ->hint('Observaciones de la compra')
+                          ->placeholder('Ingrese observaciones durante la compra')
+                          ->hintColor('primary')
+                          ->hintIcon('heroicon-m-information-circle')
+                          ->rows(3),
+                      ])
+                      ->columnSpanFull(),
+                    
+                    // Resumen de Productos
+                    Forms\Components\Card::make()
+                      ->schema([
+                        Forms\Components\Placeholder::make('productos_resumen')
+                          ->label('📦 Detalle de Productos')
+                          ->content(function ($get) {
+                            $produccion = $get('Produccion');
+                            if (!$produccion || count($produccion) === 0) {
+                              return new \Illuminate\Support\HtmlString('<p class="text-gray-500">No hay productos agregados</p>');
+                            }
+                            
+                            $html = '<div class="space-y-2">';
+                            $html .= '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">';
+                            $html .= '<thead class="bg-gray-50 dark:bg-gray-800">';
+                            $html .= '<tr>';
+                            $html .= '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Producto</th>';
+                            $html .= '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proveedor</th>';
+                            $html .= '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cantidad</th>';
+                            $html .= '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Precio Unit.</th>';
+                            $html .= '<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtotal</th>';
+                            $html .= '</tr>';
+                            $html .= '</thead>';
+                            $html .= '<tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">';
+                            
+                            $totalGeneral = 0;
+                            foreach ($produccion as $item) {
+                              if (isset($item['id_producto'])) {
+                                $producto = \App\Models\Productos::find($item['id_producto']);
+                                $proveedor = isset($item['id_proveedor']) ? \App\Models\Proveedores::find($item['id_proveedor']) : null;
+                                
+                                $nombreProducto = $producto ? $producto->nombre : 'Producto desconocido';
+                                $nombreProveedor = $proveedor ? $proveedor->nombre : 'N/A';
+                                $cantidad = $item['cantidad_producto'] ?? 0;
+                                $precioUnitario = $item['precio_unitario'] ?? 0;
+                                $subtotal = $item['subtotal'] ?? 0;
+                                $totalGeneral += $subtotal;
+                                
+                                $html .= '<tr>';
+                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">' . htmlspecialchars($nombreProducto) . '</td>';
+                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">' . htmlspecialchars($nombreProveedor) . '</td>';
+                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">' . htmlspecialchars($cantidad) . '</td>';
+                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">Q ' . number_format($precioUnitario, 2) . '</td>';
+                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">Q ' . number_format($subtotal, 2) . '</td>';
+                                $html .= '</tr>';
+                              }
+                            }
+                            
+                            $html .= '</tbody>';
+                            $html .= '<tfoot class="bg-gray-50 dark:bg-gray-800">';
+                            $html .= '<tr>';
+                            $html .= '<td colspan="4" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 text-right">TOTAL GENERAL</td>';
+                            $html .= '<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 text-right">Q ' . number_format($totalGeneral, 2) . '</td>';
+                            $html .= '</tr>';
+                            $html .= '</tfoot>';
+                            $html .= '</table>';
+                            $html .= '</div>';
+                            
+                            return new \Illuminate\Support\HtmlString($html);
+                          })
+                          ->columnSpanFull(),
+                      ])
+                      ->columnSpanFull(),
+                    
+                    // Botón para descargar PDF (solo visible en modo view)
+                    Forms\Components\Placeholder::make('descargar_pdf')
+                      ->label('')
+                      ->content(function ($livewire) {
+                        // Detectar si estamos en modo "view" (observar)
+                        $isViewMode = str_contains(get_class($livewire), 'ViewDetalleCompras');
+                        
+                        // Si no estamos en modo view, no mostrar nada
+                        if (!$isViewMode) {
+                          return null;
+                        }
+                        
+                        $recordId = $livewire->record->id_compra ?? null;
+                        
+                        if (!$recordId) {
+                          return new \Illuminate\Support\HtmlString('
+                            <div class="flex justify-center mt-6">
+                              <div class="inline-flex items-center px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                No se puede generar el PDF
+                              </div>
+                            </div>
+                          ');
+                        }
+                        
+                        $pdfUrl = route('compras.pdf', ['id' => $recordId]);
+                        
+                        return new \Illuminate\Support\HtmlString('
+                          <div class="flex justify-center mt-6">
+                            <a 
+                              href="' . $pdfUrl . '" 
+                              target="_blank"
+                              class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-md transition duration-150 ease-in-out"
+                            >
+                              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Descargar Reporte en PDF
+                            </a>
+                          </div>
+                        ');
+                      })
+                      ->columnSpanFull()
+                      ->hidden(fn ($livewire) => !str_contains(get_class($livewire), 'ViewDetalleCompras')),
+                  ])
+                  ->columnSpanFull(),
               ]),
-
-
           ])
           ->columnSpan('lg')
           ->persistTabInQueryString()
-
-
-
       ])
       ->columns(1);
 
@@ -387,6 +492,7 @@ class DetalleComprasResource extends Resource
     return [
       'index' => Pages\ListDetalleCompras::route('/'),
       'create' => Pages\CreateDetalleCompras::route('/create'),
+      'view' => Pages\ViewDetalleCompras::route('/{record}'),
       'edit' => Pages\EditDetalleCompras::route('/{record}/edit'),
     ];
   }

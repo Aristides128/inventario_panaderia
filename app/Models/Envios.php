@@ -22,5 +22,10 @@ class Envios extends Model
     {
         return $this->belongsTo(Sucursales::class, 'id_sucursal');
     }
+
+    public function detalleEnvios()
+    {
+        return $this->hasMany(DetalleEnvio::class, 'id_envio', 'id_envio');
+    }
    
 }

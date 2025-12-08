@@ -33,12 +33,13 @@ class CreateDetalleCompras extends CreateRecord
             'total' => collect($data['Produccion'] ?? [])->sum('subtotal'),
         ]);
 
-        // Crear lote
-        $hoy = Carbon::now();
-        $lote = Lotes::create([
-            'semana' => $hoy->weekOfYear,
-            'mes' => $hoy->month,
-            'anio' => $hoy->year
+        // Buscar o crear lote
+        $fechaCompra = Carbon::parse($data['fecha_compra']);
+        $lote = Lotes::firstOrCreate([
+            'semana' => $fechaCompra->weekOfYear,
+            'anio' => $fechaCompra->year
+        ], [
+            'mes' => $fechaCompra->month,
         ]);
 
         // Crear detalles

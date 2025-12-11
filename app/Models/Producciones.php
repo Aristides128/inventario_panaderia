@@ -14,4 +14,9 @@ class Producciones extends Model
         'fecha_produccion',
         'observaciones',
     ];
+
+    public function detalles()
+    {
+        return $this->hasMany(DetalleProducciones::class, 'id_produccion', 'id_produccion');
+    }
 }

@@ -24,7 +24,7 @@ class CreateDetalleCompras extends CreateRecord
     }
     protected function handleRecordCreation(array $data): DetalleCompras
     {
-        
+        // Crear compra
         $compra = Compras::create([
             'fecha_compra' => $data['fecha_compra'],
             'id_sucursal' => $data['id_sucursal'],
@@ -42,8 +42,13 @@ class CreateDetalleCompras extends CreateRecord
             'mes' => $fechaCompra->month,
         ]);
 
-        // Crear detalles
+        // Servicio de inventario
+        $inventarioService = new \App\Services\InventarioService();
+
+        // Crear detalles y registrar movimientos de inventario
         foreach ($data['Produccion'] as $producto) {
+            $cantidadTotal = $producto['cantidad_producto'] * ($producto['cantidad_paquetes'] ?? 1);
+            
             DetalleCompras::create([
                 'id_compra' => $compra->id_compra,
                 'id_proveedor' => $producto['id_proveedor'],
@@ -55,15 +60,20 @@ class CreateDetalleCompras extends CreateRecord
                 'fecha_vencimiento' => $producto['fecha_vencimiento'] ?? null,
             ]);
 
-            detalle_lotes::create([
-                'id_lote' => $lote->id_lote,
-                'id_producto' => $producto['id_producto'],
-                'cantidad' => $producto['cantidad_producto'] * ($producto['cantidad_paquetes'] ?? 1),
-                'fecha_vencimiento' => $producto['fecha_vencimiento'] ?? null,
-            ]);
+            // Registrar entrada de inventario (esto actualiza stock, detalle_lotes y crea movimiento)
+            $inventarioService->registrarEntrada(
+                idProducto: $producto['id_producto'],
+                idLote: $lote->id_lote,
+                cantidad: $cantidadTotal,
+                referenciaType: 'COMPRA',
+                referenciaId: $compra->id_compra,
+                observaciones: "Compra #{$compra->id_compra} - " . ($data['observaciones'] ?? '')
+            );
         }
+        
         $detalle_compra = DetalleCompras::latest()->first();
         return $detalle_compra;
     }
+
 
 }

@@ -3,6 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Producciones;
+use App\Models\DetalleProducciones;
+use App\Models\Envios;
+use App\Models\DetalleEnvio;
+use App\Observers\ProduccionesObserver;
+use App\Observers\DetalleProduccionesObserver;
+use App\Observers\EnviosObserver;
+use App\Observers\DetalleEnvioObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +33,12 @@ class AppServiceProvider extends ServiceProvider
     if (class_exists('Filament\Filament')) {
         \Filament\Facades\Filament::setLocale('es');
     }
+
+    // Registrar observers para restauración automática de inventario
+    Producciones::observe(ProduccionesObserver::class);
+    DetalleProducciones::observe(DetalleProduccionesObserver::class);
+    Envios::observe(EnviosObserver::class);
+    DetalleEnvio::observe(DetalleEnvioObserver::class);
 
     }
 }

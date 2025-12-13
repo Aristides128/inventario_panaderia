@@ -141,8 +141,8 @@ class DetalleComprasResource extends Resource
                               $set('cantidad_producto', $detalleActual->cantidad_producto);
                               $set('cantidad_paquetes', $detalleActual->cantidad_paquetes ?? 1);
                               
-                              // Calcular subtotal
-                              $subtotal = $detalleActual->precio_unitario * $detalleActual->cantidad_producto;
+                              // Calcular subtotal: (cantidad_paquetes * cantidad_producto) * precio_unitario
+                              $subtotal = ($detalleActual->cantidad_paquetes ?? 1) * $detalleActual->cantidad_producto * $detalleActual->precio_unitario;
                               $set('subtotal', $subtotal);
                             } else {
                               // Si es un producto nuevo en esta compra, valores por defecto
@@ -161,9 +161,17 @@ class DetalleComprasResource extends Resource
                           ->numeric()
                           ->default(1)
                           ->minValue(1)
+                          ->required()
+                          ->reactive()
                           ->hint('Cantidad de paquetes para calcular el total')
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-clipboard-document-list')
+                          ->afterStateUpdated(function ($state, callable $set, $get) {
+                            $cantidadPaquetes = max(1, $state ?? 1);
+                            $cantidadProducto = max(1, $get('cantidad_producto') ?? 1);
+                            $precioUnitario = $get('precio_unitario') ?? 0;
+                            $set('subtotal', ($cantidadPaquetes * $cantidadProducto) * $precioUnitario);
+                          })
                           ->columnSpan(['md' => 1]),
 
                         Forms\Components\TextInput::make('cantidad_producto')
@@ -174,13 +182,15 @@ class DetalleComprasResource extends Resource
                           ->minValue(1)
                           ->required()
                           ->reactive()
-                          ->hint('Cantidad de productos por cada paquete. Asegúrese de que sea un valor mayor a 0 para calcular el precio total')
+                          ->hint('Unidades por paquete. El total se calcula: Paquetes × Unidades/Paquete × Precio')
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-clipboard-document-list')
                           ->afterStateUpdated(function ($state, callable $set, $get) {
                             $cantidad = max(1, $state);
                             $set('cantidad_producto', $cantidad);
-                            $set('subtotal', ($get('precio_unitario') ?? 0) * $cantidad);
+                            $cantidadPaquetes = max(1, $get('cantidad_paquetes') ?? 1);
+                            $precioUnitario = $get('precio_unitario') ?? 0;
+                            $set('subtotal', ($cantidadPaquetes * $cantidad) * $precioUnitario);
                           })
                           ->afterStateHydrated(function (callable $set, $state) {
                             if ($state < 1)
@@ -200,7 +210,9 @@ class DetalleComprasResource extends Resource
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-currency-dollar')
                           ->afterStateUpdated(function ($state, callable $set, $get) {
-                            $set('subtotal', $state * ($get('cantidad_producto') ?? 1));
+                            $cantidadPaquetes = max(1, $get('cantidad_paquetes') ?? 1);
+                            $cantidadProducto = max(1, $get('cantidad_producto') ?? 1);
+                            $set('subtotal', ($cantidadPaquetes * $cantidadProducto) * $state);
                           })
                           ->columnSpan(['md' => 1]),
 
@@ -265,69 +277,7 @@ class DetalleComprasResource extends Resource
                       ])
                       ->columnSpanFull(),
                     
-                    // Resumen de Productos
-                    Forms\Components\Card::make()
-                      ->schema([
-                        Forms\Components\Placeholder::make('productos_resumen')
-                          ->label('📦 Detalle de Productos')
-                          ->content(function ($get) {
-                            $produccion = $get('Produccion');
-                            if (!$produccion || count($produccion) === 0) {
-                              return new \Illuminate\Support\HtmlString('<p class="text-gray-500">No hay productos agregados</p>');
-                            }
-                            
-                            $html = '<div class="space-y-2">';
-                            $html .= '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">';
-                            $html .= '<thead class="bg-gray-50 dark:bg-gray-800">';
-                            $html .= '<tr>';
-                            $html .= '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Producto</th>';
-                            $html .= '<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proveedor</th>';
-                            $html .= '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cantidad</th>';
-                            $html .= '<th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Precio Unit.</th>';
-                            $html .= '<th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtotal</th>';
-                            $html .= '</tr>';
-                            $html .= '</thead>';
-                            $html .= '<tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">';
-                            
-                            $totalGeneral = 0;
-                            foreach ($produccion as $item) {
-                              if (isset($item['id_producto'])) {
-                                $producto = \App\Models\Productos::find($item['id_producto']);
-                                $proveedor = isset($item['id_proveedor']) ? \App\Models\Proveedores::find($item['id_proveedor']) : null;
-                                
-                                $nombreProducto = $producto ? $producto->nombre : 'Producto desconocido';
-                                $nombreProveedor = $proveedor ? $proveedor->nombre : 'N/A';
-                                $cantidad = $item['cantidad_producto'] ?? 0;
-                                $precioUnitario = $item['precio_unitario'] ?? 0;
-                                $subtotal = $item['subtotal'] ?? 0;
-                                $totalGeneral += $subtotal;
-                                
-                                $html .= '<tr>';
-                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">' . htmlspecialchars($nombreProducto) . '</td>';
-                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">' . htmlspecialchars($nombreProveedor) . '</td>';
-                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">' . htmlspecialchars($cantidad) . '</td>';
-                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">Q ' . number_format($precioUnitario, 2) . '</td>';
-                                $html .= '<td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">Q ' . number_format($subtotal, 2) . '</td>';
-                                $html .= '</tr>';
-                              }
-                            }
-                            
-                            $html .= '</tbody>';
-                            $html .= '<tfoot class="bg-gray-50 dark:bg-gray-800">';
-                            $html .= '<tr>';
-                            $html .= '<td colspan="4" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 text-right">TOTAL GENERAL</td>';
-                            $html .= '<td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-gray-100 text-right">Q ' . number_format($totalGeneral, 2) . '</td>';
-                            $html .= '</tr>';
-                            $html .= '</tfoot>';
-                            $html .= '</table>';
-                            $html .= '</div>';
-                            
-                            return new \Illuminate\Support\HtmlString($html);
-                          })
-                          ->columnSpanFull(),
-                      ])
-                      ->columnSpanFull(),
-                    
+                   
                     // Botón para descargar PDF (solo visible en modo view)
                     Forms\Components\Placeholder::make('descargar_pdf')
                       ->label('')

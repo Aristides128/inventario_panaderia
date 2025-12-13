@@ -17,6 +17,13 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
+use App\Models\MovimientoInventario;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Actions\Action;
+use App\Models\lotes;
+use App\Models\detalle_lotes;
+use Carbon\Carbon;
 
 
 class ProductosResource extends Resource
@@ -105,7 +112,7 @@ class ProductosResource extends Resource
                 Tables\Columns\TextColumn::make('descripcion')
                     ->label('Descripción')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('stock')
+                Tables\Columns\TextColumn::make('stock_actual')
                     ->label('Stock')
                     ->numeric()
                     ->searchable()
@@ -137,6 +144,132 @@ class ProductosResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
+
+                Tables\Actions\Action::make('ajustar_stock')
+                    ->label('Ajustar Stock')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->color('warning')
+                    ->modalHeading('Ajustar Stock del Producto')
+                    ->modalDescription('Gestione el stock por lotes (Semanal).')
+                    ->form([
+                        Forms\Components\Select::make('tipo_movimiento')
+                            ->label('Tipo de Movimiento')
+                            ->options([
+                                'ENTRADA' => 'Entrada (Agregar Stock)',
+                                'SALIDA' => 'Salida (Reducir Stock)',
+                            ])
+                            ->default('ENTRADA')
+                            ->reactive()
+                            ->required(),
+                        
+                        // Solo para entradas: Fecha de Vencimiento
+                        Forms\Components\DatePicker::make('fecha_vencimiento')
+                            ->label('Fecha de Vencimiento')
+                            ->visible(fn (Forms\Get $get) => $get('tipo_movimiento') === 'ENTRADA'),
+
+                        // Solo para salidas: Selección de Lote
+                        Forms\Components\Select::make('id_lote_origen')
+                            ->label('Seleccionar Lote de Origen')
+                            ->options(function (Productos $record) {
+                                return detalle_lotes::where('id_producto', $record->id_producto)
+                                    ->where('cantidad', '>', 0)
+                                    ->join('lotes', 'detalle_lotes.id_lote', '=', 'lotes.id_lote')
+                                    ->orderBy('lotes.anio', 'asc')
+                                    ->orderBy('lotes.semana', 'asc')
+                                    ->get()
+                                    ->mapWithKeys(function ($item) {
+                                        return [$item->id_lote => "Lote #{$item->id_lote} (Sem: {$item->semana}, Año: {$item->anio}) - Disp: {$item->cantidad}"];
+                                    });
+                            })
+                            ->required(fn (Forms\Get $get) => $get('tipo_movimiento') === 'SALIDA')
+                            ->visible(fn (Forms\Get $get) => $get('tipo_movimiento') === 'SALIDA')
+                            ->searchable()
+                            ->preload(), // Added preload for better UX
+
+                        Forms\Components\TextInput::make('cantidad')
+                            ->label('Cantidad')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1),
+                            
+                        Forms\Components\Textarea::make('observaciones')
+                            ->label('Observaciones')
+                            ->rows(2),
+                    ])
+                    ->action(function (Productos $record, array $data): void {
+                        $cantidad = (int) $data['cantidad'];
+                        $tipo = $data['tipo_movimiento'];
+                        $cantidadAnteriorProducto = $record->stock_actual;
+                        $now = Carbon::now();
+                        
+                        $loteId = null;
+
+                        if ($tipo === 'ENTRADA') {
+                            // ENTRADA: Create/Find Weekly Lote
+                            $semana = $now->weekOfYear;
+                            $mes = $now->month;
+                            $anio = $now->year;
+
+                            $lote = lotes::firstOrCreate(
+                                ['semana' => $semana, 'anio' => $anio],
+                                ['mes' => $mes]
+                            );
+                            $loteId = $lote->id_lote;
+
+                            // Create/Find Detail
+                            $detalleLote = detalle_lotes::firstOrCreate(
+                                ['id_lote' => $lote->id_lote, 'id_producto' => $record->id_producto],
+                                ['cantidad' => 0, 'fecha_vencimiento' => $data['fecha_vencimiento'] ?? null]
+                            );
+
+                            // Update stock
+                            $detalleLote->increment('cantidad', $cantidad);
+                            
+                            $cantidadNuevaProducto = $cantidadAnteriorProducto + $cantidad;
+                            $record->update(['stock_actual' => $cantidadNuevaProducto]);
+
+                        } else {
+                            // SALIDA: Use selected Lote
+                            $loteId = $data['id_lote_origen'];
+                            $detalleLote = detalle_lotes::where('id_lote', $loteId)
+                                ->where('id_producto', $record->id_producto)
+                                ->first();
+
+                            // Validation - re-check just in case
+                            if (!$detalleLote || $detalleLote->cantidad < $cantidad) {
+                                Notification::make()
+                                    ->title('Error de Stock')
+                                    ->body("El lote seleccionado ya no tiene suficiente cantidad.")
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            // Update stock
+                            $detalleLote->decrement('cantidad', $cantidad);
+
+                            $cantidadNuevaProducto = $cantidadAnteriorProducto - $cantidad;
+                            $record->update(['stock_actual' => $cantidadNuevaProducto]);
+                        }
+
+                        // Record Movement
+                        MovimientoInventario::create([
+                            'id_producto' => $record->id_producto,
+                            'id_lote' => $loteId,
+                            'tipo_movimiento' => $tipo,
+                            'cantidad' => $cantidad,
+                            'cantidad_anterior' => $cantidadAnteriorProducto,
+                            'cantidad_nueva' => $cantidadNuevaProducto,
+                            'referencia_tipo' => 'AJUSTE',
+                            'observaciones' => $data['observaciones'] ?? 'Ajuste manual de stock',
+                            'usuario_id' => Auth::id(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Stock actualizado correctamente')
+                            ->success()
+                            ->send();
+                    }),
 
                 Tables\Actions\ViewAction::make()
                     ->label('Ver')

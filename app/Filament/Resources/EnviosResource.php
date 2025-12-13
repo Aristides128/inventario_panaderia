@@ -444,6 +444,7 @@ class EnviosResource extends Resource
             'index' => Pages\ListEnvios::route('/'),
             'create' => Pages\CreateEnvios::route('/create'),
             'edit' => Pages\EditEnvios::route('/{record}/edit'),
+            'view' => Pages\ViewDetalleEnvios::route('/{record}'),
         ];
     }
 }

@@ -146,7 +146,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>📦 REPORTE DE ENVÍO</h1>
+        <h1>REPORTE DE ENVÍO</h1>
         <p>Documento generado el {{ $fecha }}</p>
         <p><span class="badge">ID ENVÍO: #{{ $envio->id_envio }}</span></p>
     </div>
@@ -168,25 +168,18 @@
 
     <!-- Información del Envío -->
     <div class="info-section">
-        <h2>📅 Información del Envío</h2>
+        <h2>Información del Envío</h2>
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Fecha de Envío:</div>
                 <div class="info-value">{{ \Carbon\Carbon::parse($envio->fecha_envio)->format('d/m/Y') }}</div>
             </div>
         </div>
-        
-        @if($envio->observaciones)
-        <div class="observaciones-box">
-            <strong>📝 Observaciones:</strong><br>
-            {{ $envio->observaciones }}
-        </div>
-        @endif
     </div>
 
     <!-- Detalle de Productos -->
     <div class="info-section">
-        <h2>📦 Detalle de Productos</h2>
+        <h2>Detalle de Productos</h2>
         <table class="products-table">
             <thead>
                 <tr>
@@ -219,7 +212,15 @@
                 </tr>
             </tbody>
         </table>
+
+       
     </div>
+    @if($envio->observaciones)
+        <div class="observaciones-box">
+            <strong>Observaciones:</strong><br>
+            {{ $envio->observaciones }}
+        </div>
+    @endif
 
     <div class="footer">
         <p>Este documento fue generado automáticamente por el Sistema de Gestión de Inventario</p>

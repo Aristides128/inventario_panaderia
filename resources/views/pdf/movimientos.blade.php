@@ -260,7 +260,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>📊 REPORTE DE MOVIMIENTOS DE INVENTARIO</h1>
+        <h1> REPORTE DE MOVIMIENTOS DE INVENTARIO</h1>
         <p class="subtitle">Semana {{ $semana }} - {{ \Carbon\Carbon::create($anio, $mes, 1)->locale('es')->monthName }} {{ $anio }}</p>
         <p>Período: {{ $fechaInicio }} al {{ $fechaFin }}</p>
         <p>Documento generado el {{ $fechaGeneracion }}</p>
@@ -269,17 +269,17 @@
     <!-- Resumen General -->
     <div class="summary-cards">
         <div class="summary-card entradas">
-            <div class="label">⬇️ Total Entradas</div>
+            <div class="label">Total Entradas</div>
             <div class="value">{{ number_format($totalEntradas) }}</div>
             <div class="label">unidades</div>
         </div>
         <div class="summary-card salidas">
-            <div class="label">⬆️ Total Salidas</div>
+            <div class="label">Total Salidas</div>
             <div class="value">{{ number_format($totalSalidas) }}</div>
             <div class="label">unidades</div>
         </div>
         <div class="summary-card total">
-            <div class="label">📋 Total Movimientos</div>
+            <div class="label">Total Movimientos</div>
             <div class="value">{{ $totalMovimientos }}</div>
             <div class="label">registros</div>
         </div>
@@ -288,7 +288,7 @@
     <!-- Productos Más Movidos -->
     @if($productosMasMovidos->count() > 0)
     <div class="top-products">
-        <h3>🏆 Top 5 Productos Más Movidos</h3>
+        <h3>Top 5 Productos Más Movidos</h3>
         <ol>
             @foreach($productosMasMovidos as $prod)
             <li><strong>{{ $prod['producto'] }}</strong> - {{ $prod['total_movimientos'] }} movimientos ({{ number_format($prod['cantidad_total']) }} unidades)</li>
@@ -299,7 +299,7 @@
 
     <!-- Resumen por Producto -->
     <div class="info-section">
-        <h2>📦 Resumen por Producto</h2>
+        <h2> Resumen por Producto</h2>
         <table class="summary-table">
             <thead>
                 <tr>
@@ -328,7 +328,7 @@
 
     <!-- Movimientos por Tipo de Referencia -->
     <div class="info-section">
-        <h2>🔗 Movimientos por Tipo de Operación</h2>
+        <h2> Movimientos por Tipo de Operación</h2>
         <table class="summary-table">
             <thead>
                 <tr>
@@ -342,10 +342,10 @@
                 @foreach($porTipo as $tipo => $movs)
                 <tr>
                     <td>
-                        @if($tipo == 'COMPRA') 🛒 Compras
-                        @elseif($tipo == 'PRODUCCION') 🏭 Producciones
-                        @elseif($tipo == 'ENVIO') 🚚 Envíos
-                        @elseif($tipo == 'AJUSTE') 🔧 Ajustes
+                        @if($tipo == 'COMPRA')  Compras
+                        @elseif($tipo == 'PRODUCCION')  Producciones
+                        @elseif($tipo == 'ENVIO')  Envíos
+                        @elseif($tipo == 'AJUSTE') Ajustes
                         @else {{ $tipo }}
                         @endif
                     </td>
@@ -360,7 +360,7 @@
 
     <!-- Detalle de Todos los Movimientos -->
     <div class="info-section">
-        <h2>📋 Detalle Completo de Movimientos</h2>
+        <h2> Detalle Completo de Movimientos</h2>
         <table class="movements-table">
             <thead>
                 <tr>
@@ -382,7 +382,7 @@
                     <td>{{ $mov->created_at->format('H:i') }}</td>
                     <td>
                         <span class="badge badge-{{ strtolower($mov->tipo_movimiento) }}">
-                            {{ $mov->tipo_movimiento == 'ENTRADA' ? '⬇️' : '⬆️' }} {{ $mov->tipo_movimiento }}
+                            {{ $mov->tipo_movimiento == 'ENTRADA' ? '' : '' }} {{ $mov->tipo_movimiento }}
                         </span>
                     </td>
                     <td>{{ $mov->producto->nombre ?? 'N/A' }}</td>

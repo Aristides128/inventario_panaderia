@@ -114,44 +114,52 @@ class DetalleComprasResource extends Resource
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-shopping-bag')
                           ->afterStateUpdated(function ($state, callable $set, callable $get, $livewire) {
-                            // Solo autocompletar cuando estamos EDITANDO (no al crear)
-                            if (!isset($livewire->record)) {
-                              return; // Estamos creando, no autocompletar
-                            }
-                            
                             if (!$state) {
-                              // Si no hay producto seleccionado, limpiar campos
-                              $set('id_proveedor', null);
-                              $set('precio_unitario', 1);
-                              $set('cantidad_producto', 1);
-                              $set('cantidad_paquetes', 1);
-                              $set('subtotal', 1);
-                              return;
+                                // Si no hay producto seleccionado, limpiar campos
+                                $set('id_proveedor', null);
+                                $set('precio_unitario', 0);
+                                $set('cantidad_producto', 1);
+                                $set('cantidad_paquetes', 1);
+                                $set('subtotal', 0);
+                                return;
                             }
-                            
-                            // Buscar el detalle de este producto en la compra actual
-                            $detalleActual = DetalleCompras::where('id_producto', $state)
-                              ->where('id_compra', $livewire->record->id_compra)
-                              ->first();
-                            
-                            if ($detalleActual) {
-                              // Autocompletar con los datos de esta compra
-                              $set('id_proveedor', $detalleActual->id_proveedor);
-                              $set('precio_unitario', $detalleActual->precio_unitario);
-                              $set('cantidad_producto', $detalleActual->cantidad_producto);
-                              $set('cantidad_paquetes', $detalleActual->cantidad_paquetes ?? 1);
-                              
-                              // Calcular subtotal: (cantidad_paquetes * cantidad_producto) * precio_unitario
-                              $subtotal = ($detalleActual->cantidad_paquetes ?? 1) * $detalleActual->cantidad_producto * $detalleActual->precio_unitario;
-                              $set('subtotal', $subtotal);
-                            } else {
-                              // Si es un producto nuevo en esta compra, valores por defecto
-                              $set('id_proveedor', null);
-                              $set('precio_unitario', 1);
-                              $set('cantidad_producto', 1);
-                              $set('cantidad_paquetes', 1);
-                              $set('subtotal', 1);
+
+                            // Buscar el producto para obtener su precio base
+                            $producto = Productos::find($state);
+                            $precioBase = $producto ? $producto->precio_base : 0;
+
+                            // Solo autocompletar cuando estamos EDITANDO (no al crear)
+                            if (isset($livewire->record)) {
+                                // Buscar el detalle de este producto en la compra actual
+                                $detalleActual = DetalleCompras::where('id_producto', $state)
+                                    ->where('id_compra', $livewire->record->id_compra)
+                                    ->first();
+                                
+                                if ($detalleActual) {
+                                    // Autocompletar con los datos de esta compra
+                                    $set('id_proveedor', $detalleActual->id_proveedor);
+                                    $set('precio_unitario', $detalleActual->precio_unitario);
+                                    $set('cantidad_producto', $detalleActual->cantidad_producto);
+                                    $set('cantidad_paquetes', $detalleActual->cantidad_paquetes ?? 1);
+                                    
+                                    // Calcular subtotal: (cantidad_paquetes * cantidad_producto) * precio_unitario
+                                    $packets = $detalleActual->cantidad_paquetes ?? 1;
+                                    $units = $detalleActual->cantidad_producto;
+                                    $subtotal = ($packets * $units) * $detalleActual->precio_unitario;
+                                    
+                                    $set('subtotal', $subtotal);
+                                    $set('total_unidades', $packets * $units);
+                                    return;
+                                }
                             }
+
+                            // Si es una nueva compra o el producto no está en el detalle actual
+                            $set('precio_unitario', $precioBase);
+                            
+                            $packets = max(1, $get('cantidad_paquetes') ?? 1);
+                            $units = max(1, $get('cantidad_producto') ?? 1);
+                            $set('subtotal', ($packets * $units) * $precioBase);
+                            $set('total_unidades', $packets * $units);
                           })
                           ->columnSpan(['md' => 2]),
 
@@ -171,6 +179,7 @@ class DetalleComprasResource extends Resource
                             $cantidadProducto = max(1, $get('cantidad_producto') ?? 1);
                             $precioUnitario = $get('precio_unitario') ?? 0;
                             $set('subtotal', ($cantidadPaquetes * $cantidadProducto) * $precioUnitario);
+                            $set('total_unidades', $cantidadPaquetes * $cantidadProducto);
                           })
                           ->columnSpan(['md' => 1]),
 
@@ -186,16 +195,14 @@ class DetalleComprasResource extends Resource
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-clipboard-document-list')
                           ->afterStateUpdated(function ($state, callable $set, $get) {
-                            $cantidad = max(1, $state);
+                            $cantidad = $state;
                             $set('cantidad_producto', $cantidad);
-                            $cantidadPaquetes = max(1, $get('cantidad_paquetes') ?? 1);
+                            $cantidadPaquetes = $get('cantidad_paquetes');
                             $precioUnitario = $get('precio_unitario') ?? 0;
                             $set('subtotal', ($cantidadPaquetes * $cantidad) * $precioUnitario);
+                            $set('total_unidades', $cantidadPaquetes * $cantidad);
                           })
-                          ->afterStateHydrated(function (callable $set, $state) {
-                            if ($state < 1)
-                              $set('cantidad_producto', 1);
-                          })
+                          
                           ->columnSpan(['md' => 1]),
 
 
@@ -215,6 +222,14 @@ class DetalleComprasResource extends Resource
                             $set('subtotal', ($cantidadPaquetes * $cantidadProducto) * $state);
                           })
                           ->columnSpan(['md' => 1]),
+
+                        Forms\Components\TextInput::make('total_unidades')
+                           ->label('Total de Unidades')
+                           ->placeholder('Calculado autom.')
+                           ->numeric()
+                           ->disabled()
+                           ->dehydrated(false)
+                           ->columnSpan(['md' => 1]),
 
                         Forms\Components\TextInput::make('subtotal')
                           ->label('Subtotal (Q)')

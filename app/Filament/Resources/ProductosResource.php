@@ -81,6 +81,14 @@ class ProductosResource extends Resource
                                     ->default('unidad')
                                     ->required(),
 
+                                Forms\Components\TextInput::make('precio_base')
+                                    ->label('Precio Base (Q)')
+                                    ->numeric()
+                                    ->prefixIcon('heroicon-o-currency-dollar')
+                                    ->hint('Precio base sugerido para compras')
+                                    ->required()
+                                    ->default(0),
+
                                 Forms\Components\Textarea::make('descripcion')
                                     ->label('Descripción')
                                     ->required()
@@ -120,6 +128,10 @@ class ProductosResource extends Resource
                 Tables\Columns\TextColumn::make('unidad_medida')
                     ->label('Unidad de Medida')
                     ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('precio_base')
+                    ->label('Precio Base (Q)')
+                    ->money('GTQ')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')

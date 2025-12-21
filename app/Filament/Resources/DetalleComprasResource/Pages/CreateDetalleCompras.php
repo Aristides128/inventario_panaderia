@@ -61,19 +61,21 @@ class CreateDetalleCompras extends CreateRecord
             ]);
 
             // Registrar entrada de inventario (esto actualiza stock, detalle_lotes y crea movimiento)
-            $inventarioService->registrarEntrada(
-                idProducto: $producto['id_producto'],
-                idLote: $lote->id_lote,
-                cantidad: $cantidadTotal,
-                referenciaType: 'COMPRA',
-                referenciaId: $compra->id_compra,
-                observaciones: "Compra #{$compra->id_compra} - " . ($data['observaciones'] ?? '')
+            if ($data['estado_compra'] === 'Recibido') {
+                $inventarioService->registrarEntrada(
+                    idProducto: $producto['id_producto'],
+                    idLote: $lote->id_lote,
+                    cantidad: $cantidadTotal,
+                    referenciaType: 'COMPRA',
+                    referenciaId: $compra->id_compra,
+                    observaciones: "Compra #{$compra->id_compra} - " . ($data['observaciones'] ?? '')
             );
-        }
+            }
         
         $detalle_compra = DetalleCompras::latest()->first();
         return $detalle_compra;
     }
 
 
+}
 }

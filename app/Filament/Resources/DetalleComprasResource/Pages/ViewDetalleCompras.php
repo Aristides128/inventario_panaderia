@@ -78,7 +78,7 @@ class ViewDetalleCompras extends ViewRecord
                                 
                                 Infolists\Components\TextEntry::make('total')
                                     ->label('Total de la Compra')
-                                    ->money('GTQ')
+                                    ->money('USD')
                                     ->icon('heroicon-o-currency-dollar')
                                     ->color('success')
                                     ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
@@ -122,12 +122,12 @@ class ViewDetalleCompras extends ViewRecord
                                         
                                         Infolists\Components\TextEntry::make('precio_unitario')
                                             ->label('Precio Unit.')
-                                            ->money('GTQ')
+                                            ->money('USD')
                                             ->icon('heroicon-o-currency-dollar'),
                                         
                                         Infolists\Components\TextEntry::make('subtotal')
                                             ->label('Subtotal')
-                                            ->money('GTQ')
+                                            ->money('USD')
                                             ->weight('bold')
                                             ->color('success'),
                                     ]),
@@ -177,7 +177,7 @@ class ViewDetalleCompras extends ViewRecord
                                 
                                 Infolists\Components\TextEntry::make('total')
                                     ->label('TOTAL GENERAL')
-                                    ->money('GTQ')
+                                    ->money('USD')
                                     ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                     ->weight('bold')
                                     ->color('success')

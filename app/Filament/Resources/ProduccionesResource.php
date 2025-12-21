@@ -10,6 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 use Filament\Tables\Actions\RestoreAction;
 use Filament\Tables\Actions\ForceDeleteAction;
@@ -61,6 +63,49 @@ class ProduccionesResource extends Resource
             ])
             ->columns(1);
     }
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Información de la Producción')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('id_produccion')
+                            ->label('ID de Producción')
+                            ->icon('heroicon-o-hashtag'),
+                        Infolists\Components\TextEntry::make('fecha_produccion')
+                            ->label('Fecha de Producción')
+                            ->date('d/m/Y')
+                            ->icon('heroicon-o-calendar'),
+                        Infolists\Components\TextEntry::make('observaciones')
+                            ->label('Observaciones')
+                            ->columnSpanFull(),
+                    ])->columns(2),
+
+                Infolists\Components\Section::make('Detalles de Productos y Entrega')
+                    ->schema([
+                        Infolists\Components\RepeatableEntry::make('detalles')
+                            ->schema([
+                                Infolists\Components\TextEntry::make('Producto.nombre')
+                                    ->label('Producto')
+                                    ->icon('heroicon-o-shopping-bag'),
+                                Infolists\Components\TextEntry::make('cantidad_utilizada')
+                                    ->label('Cantidad')
+                                    ->icon('heroicon-o-clipboard-document-list'),
+                                Infolists\Components\TextEntry::make('Empleado.nombre')
+                                    ->label('Recibido por')
+                                    ->icon('heroicon-o-user')
+                                    ->default('Sin asignar'),
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label('Fecha/Hora Registro')
+                                    ->dateTime('d/m/Y H:i')
+                                    ->icon('heroicon-o-clock'),
+                            ])
+                            ->columns(4)
+                            ->columnSpanFull(),
+                    ]),
+            ]);
+    }
+
 
     public static function table(Table $table): Table
     {
@@ -160,6 +205,7 @@ class ProduccionesResource extends Resource
         return [
             'index' => Pages\ListProducciones::route('/'),
             'create' => Pages\CreateProducciones::route('/create'),
+            'view' => Pages\ViewProducciones::route('/{record}'),
             'edit' => Pages\EditProducciones::route('/{record}/edit'),
         ];
     }

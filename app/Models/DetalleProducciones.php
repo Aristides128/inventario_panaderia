@@ -17,16 +17,22 @@ class DetalleProducciones extends Model
     protected $fillable = [
         'id_produccion',
         'id_producto',
+        'id_empleado',
         'cantidad_utilizada',
     ];
 
     public function Produccion()    
     {
-        return $this->hasMany(Producciones::class, 'id_produccion');
+        return $this->belongsTo(Producciones::class, 'id_produccion');
     }
     
     public function Producto()    
     {
         return $this->belongsTo(Productos::class, 'id_producto');
+    }
+
+    public function Empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'id_empleado');
     }
 }

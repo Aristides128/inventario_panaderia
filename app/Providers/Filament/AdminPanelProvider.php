@@ -26,7 +26,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->passwordReset()
             ->emailVerification()
-            ->databaseNotifications()
             ->profile()
             ->brandName('Inventario panaderia')
             ->brandLogo(asset('storage/images/Panaderia-francesa.png'))
@@ -60,7 +59,6 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Widgets\LowStockAlertWidget::class,
                 \App\Filament\Widgets\StockStatusWidget::class,
-                \App\Filament\Widgets\InventoryMovementsWidget::class,
                 \App\Filament\Widgets\TopProductsWidget::class,
             ])
             ->middleware([

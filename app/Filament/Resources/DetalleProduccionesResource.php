@@ -55,6 +55,18 @@ class DetalleProduccionesResource extends Resource
                                     ->preload()
                                     ->required(),
 
+                                 Forms\Components\Select::make('id_empleado')
+                                    ->label('Empleado que Recibe')
+                                    ->relationship('Empleado', 'nombre')
+                                    ->placeholder('Seleccione el empleado')
+                                    ->prefixIcon('heroicon-o-user')
+                                    ->hint('Empleado responsable de recibir el producto')
+                                    ->hintIcon('heroicon-m-information-circle')
+                                    ->hintColor('primary')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(),
+
                                 Forms\Components\TextInput::make('cantidad_utilizada')
                                     ->label('Cantidad Utilizada')
                                     ->placeholder('Ingrese la cantidad utilizada')
@@ -78,11 +90,20 @@ class DetalleProduccionesResource extends Resource
     {
         return $table
             ->columns([
-                    Tables\Columns\TextColumn::make('id_produccion')
-                        ->sortable(),
-                    Tables\Columns\TextColumn::make('id_producto')
-                        ->sortable(),
+                    Tables\Columns\TextColumn::make('Produccion.observaciones')
+                        ->label('Producción')
+                        ->sortable()
+                        ->searchable(),
+                    Tables\Columns\TextColumn::make('Producto.nombre')
+                        ->label('Producto')
+                        ->sortable()
+                        ->searchable(),
+                    Tables\Columns\TextColumn::make('Empleado.nombre')
+                        ->label('Recibido por')
+                        ->sortable()
+                        ->searchable(),
                     Tables\Columns\TextColumn::make('cantidad_utilizada')
+                        ->label('Cantidad')
                         ->numeric()
                         ->sortable(),
                     Tables\Columns\TextColumn::make('created_at')
@@ -99,31 +120,26 @@ class DetalleProduccionesResource extends Resource
                         ->toggleable(isToggledHiddenByDefault: true),
                 ])
             ->filters([
-                    //
+                      TrashedFilter::make(),
                 ])
             ->actions([
-                    Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver envío')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
-
+    
                 Tables\Actions\EditAction::make()
                     ->label('Editar')
-                    ->tooltip('Editar envío')
+                    ->tooltip('Editar detalle')
                     ->color('success')
                     ->visible(function (DetalleProducciones $record) {
                         return $record->deleted_at === null;
                     })
                     ->icon('heroicon-o-pencil'),
                 RestoreAction::make()
-                    ->tooltip('Restaurar envío')
+                    ->tooltip('Restaurar detalle')
                     ->visible(function (DetalleProducciones $record) {
                         return $record->deleted_at !== null;
                     }),
                 Tables\Actions\DeleteAction::make()
                     ->label('Eliminar')
-                    ->tooltip('Eliminar envío')
+                    ->tooltip('Eliminar detalle')
                     ->color('danger')
                     ->visible(function (DetalleProducciones $record) {
                         return $record->deleted_at === null;
@@ -131,14 +147,14 @@ class DetalleProduccionesResource extends Resource
 
                 ForceDeleteAction::make()
                     ->label('Borrar definitivamente')
-                    ->tooltip('Eliminar definitivamente envío')
+                    ->tooltip('Eliminar definitivamente detalle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('¿Eliminar envío?')
-                    ->modalDescription('¿Estás seguro de que deseas eliminar esta envío? Esta acción no se puede deshacer.')
+                    ->modalHeading('¿Eliminar detalle?')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar este detalle? Esta acción no se puede deshacer.')
                     ->modalSubmitActionLabel('Sí, eliminar')
                     ->modalCancelActionLabel('Cancelar')
-                    ->action(function (Envios $record) {
+                    ->action(function (DetalleProducciones $record) {
                         $record->forceDelete();
                     }),
             ])
@@ -147,14 +163,14 @@ class DetalleProduccionesResource extends Resource
                 Tables\Actions\RestoreBulkAction::make()
                     ->color('success')
                     ->label('Restaurar registros')
-                    ->tooltip('Restaurar envío')
+                    ->tooltip('Restaurar detalles')
                 ,
 
                 // Borrado definitivo multiple de datos eliminados logícamente
                 Tables\Actions\ForceDeleteBulkAction::make()
                     ->color('danger')
                     ->label('Borrar registros definitivamente')
-                    ->tooltip('Borrar definitivamente envío')
+                    ->tooltip('Borrar definitivamente detalles')
 
             ])
             ->recordUrl(null)

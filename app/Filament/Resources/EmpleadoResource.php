@@ -30,22 +30,27 @@ class EmpleadoResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('nombre')
                             ->label('Nombre Completo')
+                            ->placeholder('Ingrese nombre completo')
                             ->required()
                             ->maxLength(255)
                             ->prefixIcon('heroicon-o-user'),
                         Forms\Components\TextInput::make('puesto')
                             ->label('Puesto / Cargo')
+                            ->placeholder('Ingrese puesto o cargo')
                             ->maxLength(255)
                             ->default(null)
                             ->prefixIcon('heroicon-o-briefcase'),
                         Forms\Components\TextInput::make('telefono')
                             ->label('Teléfono')
+                            ->placeholder('Ingrese número de teléfono')
                             ->tel()
                             ->maxLength(255)
                             ->default(null)
                             ->prefixIcon('heroicon-o-phone'),
                         Forms\Components\Toggle::make('estado')
                             ->label('Empleado Activo')
+                            ->hint('Seleccione el estado del empleado')
+                            ->hintcolor('primary')
                             ->onIcon('heroicon-m-check')
                             ->offIcon('heroicon-m-x-mark')
                             ->required()
@@ -83,7 +88,17 @@ class EmpleadoResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                ->label('Editar')
+                ->tooltip('Editar empleado'),
+                Tables\Actions\DeleteAction::make()
+                ->label('Eliminar')
+                ->tooltip('Eliminar empleado')
+                ,
+                Tables\Actions\ViewAction::make()
+                ->label('Ver')
+                ->tooltip('Ver empleado')
+                ->color('success'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

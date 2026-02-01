@@ -98,56 +98,71 @@ class ViewDetalleCompras extends ViewRecord
                     ->icon('heroicon-o-cube')
                     ->schema([
                         Infolists\Components\RepeatableEntry::make('detalleCompras')
-                            ->label('')
+                            ->hiddenLabel()
                             ->schema([
-                                Infolists\Components\Grid::make(6)
+                                Infolists\Components\Card::make()
                                     ->schema([
-                                        Infolists\Components\TextEntry::make('producto.nombre')
-                                            ->label('Producto')
-                                            ->icon('heroicon-o-shopping-bag')
-                                            ->color('primary')
-                                            ->weight('bold')
-                                            ->columnSpan(2),
+                                        Infolists\Components\Grid::make(2)
+                                            ->schema([
+                                                Infolists\Components\Group::make([
+                                                    Infolists\Components\TextEntry::make('producto.nombre')
+                                                        ->label('Producto')
+                                                        ->icon('heroicon-o-shopping-bag')
+                                                        ->color('primary')
+                                                        ->weight('bold')
+                                                        ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
+                                                    
+                                                    Infolists\Components\TextEntry::make('proveedor.nombre')
+                                                        ->label('Proveedor')
+                                                        ->icon('heroicon-o-user')
+                                                        ->color('gray'),
+                                                ]),
+
+                                                Infolists\Components\Group::make([
+                                                    Infolists\Components\Grid::make(2)
+                                                        ->schema([
+                                                            Infolists\Components\TextEntry::make('cantidad_producto')
+                                                                ->label('Unid. por Paquete')
+                                                                ->badge()
+                                                                ->color('info'),
+
+                                                            Infolists\Components\TextEntry::make('cantidad_paquetes')
+                                                                ->label('Paquetes')
+                                                                ->badge()
+                                                                ->color('warning'),
+                                                        ]),
+                                                    
+                                                    Infolists\Components\TextEntry::make('total_unidades')
+                                                        ->label('Total Unidades')
+                                                        ->state(fn ($record) => ($record->cantidad_paquetes ?? 1) * $record->cantidad_producto)
+                                                        ->weight('bold')
+                                                        ->suffix(' unidades'),
+                                                ]),
+                                            ]),
                                         
-                                        Infolists\Components\TextEntry::make('proveedor.nombre')
-                                            ->label('Proveedor')
-                                            ->icon('heroicon-o-user')
-                                            ->color('info'),
-                                        
-                                        Infolists\Components\TextEntry::make('cantidad_producto')
-                                            ->label('Cantidad')
-                                            ->icon('heroicon-o-clipboard-document-list')
-                                            ->badge()
-                                            ->color('warning'),
-                                        
-                                        Infolists\Components\TextEntry::make('precio_unitario')
-                                            ->label('Precio Unit.')
-                                            ->money('USD')
-                                            ->icon('heroicon-o-currency-dollar'),
-                                        
-                                        Infolists\Components\TextEntry::make('subtotal')
-                                            ->label('Subtotal')
-                                            ->money('USD')
-                                            ->weight('bold')
-                                            ->color('success'),
-                                    ]),
-                                
-                                Infolists\Components\Grid::make(2)
-                                    ->schema([
-                                        Infolists\Components\TextEntry::make('cantidad_paquetes')
-                                            ->label('Cantidad de Paquetes')
-                                            ->icon('heroicon-o-cube')
-                                            ->badge()
-                                            ->color('gray'),
-                                        
-                                        Infolists\Components\TextEntry::make('fecha_vencimiento')
-                                            ->label('Fecha de Vencimiento')
-                                            ->date('d/m/Y')
-                                            ->icon('heroicon-o-calendar')
-                                            ->placeholder('Sin fecha de vencimiento')
-                                            ->color('danger'),
-                                    ]),
+                                        Infolists\Components\Grid::make(3)
+                                            ->schema([
+                                                Infolists\Components\TextEntry::make('precio_unitario')
+                                                    ->label('Precio Unitario')
+                                                    ->money('USD')
+                                                    ->icon('heroicon-o-tag'),
+                                                
+                                                Infolists\Components\TextEntry::make('subtotal')
+                                                    ->label('Subtotal Item')
+                                                    ->money('USD')
+                                                    ->weight('black')
+                                                    ->color('success')
+                                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
+
+                                                Infolists\Components\TextEntry::make('fecha_vencimiento')
+                                                    ->label('Vencimiento')
+                                                    ->date('d/m/Y')
+                                                    ->icon('heroicon-o-calendar-days')
+                                                    ->color(fn ($state) => $state && \Carbon\Carbon::parse($state)->isPast() ? 'danger' : 'gray'),
+                                            ])->extraAttributes(['class' => 'mt-4 pt-4 border-t border-gray-100 dark:border-gray-800']),
+                                    ])
                             ])
+                            ->grid(1)
                             ->columnSpanFull(),
                     ]),
                 

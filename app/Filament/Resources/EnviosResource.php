@@ -117,49 +117,50 @@ class EnviosResource extends Resource
                                                 Forms\Components\Grid::make(2)
                                                     ->schema([
                                                         Forms\Components\Select::make('id_producto')
-                                                        ->label('Productos disponibles')
+                                                            ->label('Producto a enviar')
                                                             ->required()
                                                             ->searchable()
                                                             ->prefixIcon('heroicon-o-shopping-bag')
                                                             ->placeholder('Seleccione un producto')
+                                                            ->hint(fn ($get) => $get('id_producto') ? "Disponible: " . (\App\Models\Productos::find($get('id_producto'))?->stock_actual ?? 0) . " unidades" : null)
                                                             ->hintIcon('heroicon-m-information-circle')
-                                                            ->options(Productos::all()->pluck('nombre', 'id_producto'))
-                                                            ->afterStateUpdated(function ($state, callable $set, callable $get, $livewire) {
-                          
-                            if (!isset($livewire->record)) {
-                              return; // Estamos creando, no autocompletar
-                            }
-                            
-                            if (!$state) {
-                              // Si no hay producto seleccionado, limpiar campos
-                              $set('cantidad', null);
-                              return;
-                            }
-                            
-                            // Buscar el detalle de este producto en el envío actual
-                            $detalleActual = DetalleEnvio::where('id_producto', $state)
-                              ->where('id_envio', $livewire->record->id_envio)
-                              ->first();
-                            
-                            if ($detalleActual) {
-                              // Autocompletar con la cantidad registrada en este envío
-                              $set('cantidad', $detalleActual->cantidad);
-                            } else {
-                              // Si es un producto nuevo en este envío, limpiar
-                              $set('cantidad', null);
-                            }
-                          })
+                                                            ->hintColor('info')
+                                                            ->options(function () {
+                                                                return \App\Models\Productos::all()->mapWithKeys(function ($producto) {
+                                                                    $formato = $producto->stock_actual > 0 
+                                                                        ? "{$producto->nombre} (Stock: {$producto->stock_actual})" 
+                                                                        : "{$producto->nombre} (SIN STOCK)";
+                                                                    return [$producto->id_producto => $formato];
+                                                                });
+                                                            })
+                                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                                if (!$state) return;
+                                                                $set('cantidad', null);
+                                                            })
                                                             ->reactive()
                                                             ->preload(),
 
                                                         Forms\Components\TextInput::make('cantidad')
-                                                            ->label('Cantidad de productos')
-                                                            ->placeholder('Cantidad a enviar')
-                                                            ->hintIcon('heroicon-m-information-circle')
+                                                            ->label('Cantidad a enviar')
+                                                            ->placeholder('Ingrese la cantidad')
                                                             ->prefixIcon('heroicon-o-clipboard-document-list')
                                                             ->required()
                                                             ->numeric()
                                                             ->default(0)
+                                                            ->rules([
+                                                                fn (Forms\Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                                                    $productoId = $get('id_producto');
+                                                                    if (!$productoId) return;
+
+                                                                    $producto = \App\Models\Productos::find($productoId);
+                                                                    if (!$producto) return;
+
+                                                                    if ($value > $producto->stock_actual) {
+                                                                        $fail("Stock insuficiente en lotes. Máximo disponible: {$producto->stock_actual}");
+                                                                    }
+                                                                },
+                                                            ])
+
 
                                                     ])
                                             ])

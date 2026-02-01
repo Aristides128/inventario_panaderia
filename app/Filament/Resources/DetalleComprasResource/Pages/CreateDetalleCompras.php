@@ -22,7 +22,7 @@ class CreateDetalleCompras extends CreateRecord
     {
         return 'Detalle de compra creado exitosamente';
     }
-    protected function handleRecordCreation(array $data): DetalleCompras
+    protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
         // Crear compra
         $compra = Compras::create([
@@ -71,11 +71,8 @@ class CreateDetalleCompras extends CreateRecord
                     observaciones: "Compra #{$compra->id_compra} - " . ($data['observaciones'] ?? '')
             );
             }
+        }
         
-        $detalle_compra = DetalleCompras::latest()->first();
-        return $detalle_compra;
+        return $compra;
     }
-
-
-}
 }

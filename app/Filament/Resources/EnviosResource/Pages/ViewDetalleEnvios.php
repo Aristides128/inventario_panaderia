@@ -33,42 +33,94 @@ class ViewDetalleEnvios extends ViewRecord
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Información del Envío')
+                Infolists\Components\Grid::make(3)
                     ->schema([
-                        Infolists\Components\TextEntry::make('Sucursales.nombre')
-                            ->label('Sucursal Origen')
-                            ->icon('heroicon-o-building-office'),
-                        
-                        Infolists\Components\TextEntry::make('sucursal_destino_id')
-                            ->label('Sucursal Destino')
-                            ->formatStateUsing(function ($state) {
-                                return Sucursales::find($state)?->nombre ?? 'Desconocida';
-                            })
-                            ->icon('heroicon-o-building-office-2'),
-
-                        Infolists\Components\TextEntry::make('fecha_envio')
-                            ->label('Fecha de Envío')
-                            ->date('d/m/Y')
-                            ->icon('heroicon-o-calendar'),
-
-                        Infolists\Components\TextEntry::make('observaciones')
-                            ->label('Observaciones')
-                            ->columnSpanFull(),
-                    ])->columns(2),
-
-                Infolists\Components\Section::make('Productos Enviados')
-                    ->schema([
-                        Infolists\Components\RepeatableEntry::make('detalleEnvios')
-                            ->schema([
-                                Infolists\Components\TextEntry::make('producto.nombre')
-                                    ->label('Producto')
-                                    ->default('Producto no encontrado'),
+                        Infolists\Components\Group::make([
+                            Infolists\Components\Section::make('Información del Envío')
+                                ->description('Detalles logísticos y temporales')
+                                ->icon('heroicon-m-truck')
+                                ->schema([
+                                    Infolists\Components\TextEntry::make('Sucursales.nombre')
+                                        ->label('Sucursal Origen')
+                                        ->weight('bold')
+                                        ->color('primary')
+                                        ->icon('heroicon-o-home-modern')
+                                        ->iconColor('primary'),
                                     
-                                Infolists\Components\TextEntry::make('cantidad')
-                                    ->label('Cantidad'),
+                                    Infolists\Components\TextEntry::make('sucursal_destino_id')
+                                        ->label('Sucursal Destino')
+                                        ->formatStateUsing(fn ($state) => Sucursales::find($state)?->nombre ?? 'Desconocida')
+                                        ->weight('bold')
+                                        ->color('success')
+                                        ->icon('heroicon-o-map-pin')
+                                        ->iconColor('success'),
+
+                                    Infolists\Components\TextEntry::make('fecha_envio')
+                                        ->label('Fecha de Envío')
+                                        ->date('d/M/Y')
+                                        ->icon('heroicon-o-calendar-days')
+                                        ->color('info'),
+
+                                    Infolists\Components\TextEntry::make('observaciones')
+                                        ->label('Observaciones')
+                                        ->placeholder('Sin observaciones registradas.')
+                                        ->columnSpanFull()
+                                        ->prose(),
+                                ])->columns(2),
+                        ])->columnSpan(2),
+
+                        Infolists\Components\Group::make([
+                            Infolists\Components\Section::make('Resumen')
+                                ->schema([
+                                    Infolists\Components\TextEntry::make('detalleEnvios_count')
+                                        ->label('Total de Productos')
+                                        ->state(fn ($record) => $record->detalleEnvios()->count())
+                                        ->weight('black')
+                                        ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                        ->color('warning')
+                                        ->suffix(' ítems únicos'),
+                                        
+                                    Infolists\Components\TextEntry::make('id_envio')
+                                        ->label('Folio de Envío')
+                                        ->prefix('#')
+                                        ->fontFamily('mono')
+                                        ->color('gray'),
+                                ])
+                        ])->columnSpan(1),
+
+                        Infolists\Components\Section::make('Productos Enviados')
+                            ->description('Listado de mercancía en tránsito')
+                            ->headerActions([
+                                Infolists\Components\Actions\Action::make('print')
+                                    ->label('Imprimir Tabular')
+                                    ->icon('heroicon-m-printer')
+                                    ->action(fn() => null) // Placeholder o acción real
+                                    ->color('gray')
                             ])
-                            ->columns(2)
-                    ]),
+                            ->schema([
+                                Infolists\Components\RepeatableEntry::make('detalleEnvios')
+                                    ->hiddenLabel()
+                                    ->schema([
+                                        Infolists\Components\Grid::make(2)
+                                            ->schema([
+                                                Infolists\Components\TextEntry::make('producto.nombre')
+                                                    ->label('Producto')
+                                                    ->weight('bold')
+                                                    ->icon('heroicon-o-tag')
+                                                    ->default('Producto no encontrado'),
+                                                    
+                                                Infolists\Components\TextEntry::make('cantidad')
+                                                    ->label('Cantidad Enviada')
+                                                    ->badge()
+                                                    ->color('success')
+                                                    ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                                    ->icon('heroicon-m-archive-box'),
+                                            ])
+                                    ])
+                                    ->grid(2) // Esto hace que se vean dos productos por fila
+                                    ->columnSpanFull()
+                            ])->columnSpanFull(),
+                    ])
             ]);
     }
 }

@@ -52,6 +52,7 @@ class DetalleComprasResource extends Resource
                       ->prefixIcon('heroicon-o-calendar')
                       ->hint('Fecha de la compra')
                       ->hintIcon('heroicon-m-information-circle')
+                      ->hintColor('primary')
                       ->columnSpan(['md' => 2])
                       ->required()
                       ->closeOnDateSelection()
@@ -97,6 +98,7 @@ class DetalleComprasResource extends Resource
                           ->live()
                           ->hint('Seleccione el proveedor antes de elegir el producto')
                           ->hintIcon('heroicon-m-information-circle')
+                          ->hintcolor('primary')
                           ->prefixIcon('heroicon-o-user')
                           ->afterStateUpdated(fn($state, callable $set) => $set('id_producto', null))
                           ->columnSpan(['md' => 2]),
@@ -113,6 +115,7 @@ class DetalleComprasResource extends Resource
                           ->hint('Seleccione un producto para calcular el precio total')
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-shopping-bag')
+                          ->hintcolor('primary')
                           ->afterStateUpdated(function ($state, callable $set, callable $get, $livewire) {
                             if (!$state) {
                                 // Si no hay producto seleccionado, limpiar campos
@@ -173,6 +176,7 @@ class DetalleComprasResource extends Resource
                           ->reactive()
                           ->hint('Cantidad de paquetes para calcular el total')
                           ->hintIcon('heroicon-m-information-circle')
+                          ->hintcolor('primary')
                           ->prefixIcon('heroicon-o-clipboard-document-list')
                           ->afterStateUpdated(function ($state, callable $set, $get) {
                             $cantidadPaquetes = max(1, $state ?? 1);
@@ -193,6 +197,7 @@ class DetalleComprasResource extends Resource
                           ->reactive()
                           ->hint('Unidades por paquete. El total se calcula: Paquetes × Unidades/Paquete × Precio')
                           ->hintIcon('heroicon-m-information-circle')
+                          ->hintcolor('primary')
                           ->prefixIcon('heroicon-o-clipboard-document-list')
                           ->afterStateUpdated(function ($state, callable $set, $get) {
                             $cantidad = $state;
@@ -215,6 +220,7 @@ class DetalleComprasResource extends Resource
                           ->reactive()
                           ->hint('Precio unitario del producto')
                           ->hintIcon('heroicon-m-information-circle')
+                          ->hintcolor('primary')
                           ->prefixIcon('heroicon-o-currency-dollar')
                           ->afterStateUpdated(function ($state, callable $set, $get) {
                             $cantidadPaquetes = max(1, $get('cantidad_paquetes') ?? 1);
@@ -229,10 +235,13 @@ class DetalleComprasResource extends Resource
                            ->numeric()
                            ->disabled()
                            ->dehydrated(false)
+                           ->hint('Total de unidades calculado automáticamente')
+                           ->hintIcon('heroicon-m-information-circle')
+                           ->hintcolor('primary')
                            ->columnSpan(['md' => 1]),
 
                         Forms\Components\TextInput::make('subtotal')
-                          ->label('Subtotal (Q)')
+                          ->label('Subtotal ($}')
                           ->placeholder('Precio total calculado automáticamente')
                           ->numeric()
                         
@@ -242,12 +251,12 @@ class DetalleComprasResource extends Resource
                         Forms\Components\DatePicker::make('fecha_vencimiento')
                           ->label('Fecha de vencimiento')
                           ->columnSpan(['md' => 1])
-
                           ->placeholder('Ingrese fecha de vencimiento')
                           ->displayFormat('d/m/Y')
                           ->hint('Requerido para productos perecederos')
                           ->hintIcon('heroicon-m-information-circle')
                           ->prefixIcon('heroicon-o-calendar')
+                          ->hintcolor('primary')
                           ->closeOnDateSelection()
                           ->native(false),
                       ])
@@ -272,13 +281,6 @@ class DetalleComprasResource extends Resource
             Forms\Components\Tabs\Tab::make('Resumen')
               ->icon('heroicon-o-document-text')
               ->schema([
-                Forms\Components\Card::make()
-                  ->schema([
-                    Forms\Components\Placeholder::make('resumen_titulo')
-                      ->label('')
-                      ->content(new \Illuminate\Support\HtmlString('<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">📋 Resumen de la Compra</h2>'))
-                      ->columnSpanFull(),
-              
                     // Observaciones
                     Forms\Components\Card::make()
                       ->schema([
@@ -319,7 +321,6 @@ class DetalleComprasResource extends Resource
                             </div>
                           ');
                         }
-                        
                         $pdfUrl = route('compras.pdf', ['id' => $recordId]);
                         
                         return new \Illuminate\Support\HtmlString('
@@ -341,16 +342,12 @@ class DetalleComprasResource extends Resource
                       ->hidden(fn ($livewire) => !str_contains(get_class($livewire), 'ViewDetalleCompras')),
                   ])
                   ->columnSpanFull(),
-              ]),
           ])
           ->columnSpan('lg')
           ->persistTabInQueryString()
       ])
       ->columns(1);
-
-
   }
-
 
   public static function table(Table $table): Table
   {

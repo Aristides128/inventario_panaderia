@@ -130,8 +130,8 @@ class ProductosResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('precio_base')
-                    ->label('Precio Base (Q)')
-                    ->money('GTQ')
+                    ->label('Precio Base ($)')
+                    ->money('USD')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')

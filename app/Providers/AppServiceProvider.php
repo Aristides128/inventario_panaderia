@@ -7,10 +7,14 @@ use App\Models\Producciones;
 use App\Models\DetalleProducciones;
 use App\Models\Envios;
 use App\Models\DetalleEnvio;
+use App\Models\Compras;
+use App\Models\DetalleCompras;
 use App\Observers\ProduccionesObserver;
 use App\Observers\DetalleProduccionesObserver;
 use App\Observers\EnviosObserver;
 use App\Observers\DetalleEnvioObserver;
+use App\Observers\ComprasObserver;
+use App\Observers\DetalleComprasObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
     DetalleProducciones::observe(DetalleProduccionesObserver::class);
     Envios::observe(EnviosObserver::class);
     DetalleEnvio::observe(DetalleEnvioObserver::class);
+
+    // Anulación de compras al borrar definitivamente
+    Compras::observe(ComprasObserver::class);
+    DetalleCompras::observe(DetalleComprasObserver::class);
 
     }
 }

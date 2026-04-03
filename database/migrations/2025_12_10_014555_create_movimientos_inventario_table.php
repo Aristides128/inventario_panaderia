@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_movimiento');
             $table->foreignId('id_producto')->constrained('productos', 'id_producto')->onDelete('cascade');
             $table->foreignId('id_lote')->nullable()->constrained('lotes', 'id_lote')->onDelete('set null');
-            $table->enum('tipo_movimiento', ['ENTRADA', 'SALIDA']);
+            $table->enum('tipo_movimiento', ['ENTRADA', 'SALIDA',]);
             $table->integer('cantidad');
             $table->integer('cantidad_anterior')->comment('Stock antes del movimiento');
             $table->integer('cantidad_nueva')->comment('Stock después del movimiento');

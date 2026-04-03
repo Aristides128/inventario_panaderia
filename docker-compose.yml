@@ -1,0 +1,42 @@
+
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_php
+    volumes:
+      - ./:/var/www/html
+    working_dir: /var/www/html
+    
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mariadb
+    networks:
+      - inventario_network
+      
+    
+  mariadb:
+    image: mariadb
+    container_name: inventario_db
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_USER: aristides
+      MARIADB_PASSWORD: aristides123
+      MARIADB_DATABASE: base1
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - inventario_network
+
+networks:
+  inventario_network:
+    driver: bridge
+
+volumes:
+  db_data:

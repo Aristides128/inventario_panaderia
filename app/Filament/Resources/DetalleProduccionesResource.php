@@ -27,77 +27,105 @@ class DetalleProduccionesResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Card::make()
-                    ->schema([
-                        Forms\Components\Select::make('id_produccion')
-                            ->label('Producción')
-                            ->placeholder('Seleccione una producción')
-                            ->relationship('Produccion', 'observaciones')
-                            ->prefixIcon('heroicon-o-calendar')
-                            ->hint('Seleccione la producción asociada')
-                            ->hintIcon('heroicon-m-information-circle')
-                            ->hintColor('primary')
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->live()
-                            ->columnSpan('full'),
+                Forms\Components\Wizard::make([
+                    // ── Paso 1: Datos Generales ──────────────────────────────────────
+                    Forms\Components\Wizard\Step::make('Datos generales')
+                        ->label('Datos de Producción')
+                        ->description('Seleccione la producción')
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->completedIcon('heroicon-o-check-circle')
+                        ->schema([
+                            Forms\Components\Select::make('id_produccion')
+                                ->label('Producción')
+                                ->placeholder('Seleccione una producción')
+                                ->relationship('Produccion', 'observaciones')
+                                ->prefixIcon('heroicon-o-calendar')
+                                ->hint('Seleccione la producción asociada')
+                                ->hintIcon('heroicon-m-information-circle')
+                                ->hintColor('primary')
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->live()
+                                ->columnSpan('full'),
+                        ]),
 
-                        Forms\Components\Repeater::make('detalles')
-                            ->label('Productos Utilizados')
-                            ->schema([
-                                Forms\Components\Grid::make(2)
-                                    ->schema([
-                                        Forms\Components\Select::make('id_producto')
-                                            ->label('Producto')
-                                            ->relationship('Producto', 'nombre')
-                                            ->placeholder('Seleccione un producto')
-                                            ->prefixIcon('heroicon-o-shopping-bag')
-                                            ->hint('Seleccione el producto utilizado')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->hintColor('primary')
-                                            ->searchable()
-                                            ->preload()
-                                            ->required(),
+                    // ── Paso 2: Productos Utilizados ─────────────────────────────────
+                    Forms\Components\Wizard\Step::make('Productos')
+                        ->label('Materia prima')
+                        ->description('Detalle de los productos a utilizar')
+                        ->icon('heroicon-o-beaker')
+                        ->completedIcon('heroicon-o-check-circle')
+                        ->schema([
+                            Forms\Components\Repeater::make('detalles')
+                                ->label('')
+                                ->schema([
+                                    Forms\Components\Grid::make(12)
+                                        ->schema([
+                                            Forms\Components\Select::make('id_producto')
+                                                ->label('Producto')
+                                                ->relationship('Producto', 'nombre')
+                                                ->placeholder('Seleccione un producto')
+                                                ->prefixIcon('heroicon-o-shopping-bag')
+                                                ->hint(fn ($get) => $get('id_producto') ? "Disponible: " . (\App\Models\Productos::find($get('id_producto'))?->stock_actual ?? 0) . " u." : null)
+                                                ->hintIcon('heroicon-m-information-circle')
+                                                ->hintColor('info')
+                                                ->searchable()
+                                                ->preload()
+                                                ->required()
+                                                ->reactive()
+                                                ->columnSpan(['md' => 5]),
 
-                                        Forms\Components\Select::make('id_empleado')
-                                            ->label('Empleado que Recibe')
-                                            ->relationship('Empleado', 'nombre')
-                                            ->placeholder('Seleccione el empleado')
-                                            ->prefixIcon('heroicon-o-user')
-                                            ->hint('Empleado responsable de recibir el producto')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->hintColor('primary')
-                                            ->searchable()
-                                            ->preload()
-                                            ->required(),
+                                            Forms\Components\Select::make('id_empleado')
+                                                ->label('Empleado que Recibe')
+                                                ->relationship('Empleado', 'nombre')
+                                                ->placeholder('Seleccione el empleado')
+                                                ->prefixIcon('heroicon-o-user')
+                                                ->searchable()
+                                                ->preload()
+                                                ->required()
+                                                ->columnSpan(['md' => 4]),
 
-                                        Forms\Components\TextInput::make('cantidad_utilizada')
-                                            ->label('Cantidad Utilizada')
-                                            ->placeholder('Ingrese la cantidad utilizada')
-                                            ->prefixIcon('heroicon-o-clipboard-document-list')
-                                            ->hint('Cantidad de producto utilizado en la producción')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->hintColor('primary')
-                                            ->numeric()
-                                            ->minValue(1)
-                                            ->default(1)
-                                            ->required()
-                                            ->columnSpan('full'),
-                                    ]),
-                            ])
-                            ->defaultItems(1)
-                            ->addActionLabel('Agregar otro producto')
-                            ->reorderable()
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['id_producto'] ?? 'Nuevo producto')
-                            ->columnSpan('full')
-                            ->minItems(1)
-                            ->required(),
-                    ])
-                    ->columnSpan('lg'),
-            ])
-            ->columns(1);
+                                            Forms\Components\TextInput::make('cantidad_utilizada')
+                                                ->label('Cantidad Utilizada')
+                                                ->placeholder('Ej: 5')
+                                                ->prefixIcon('heroicon-o-clipboard-document-list')
+                                                ->numeric()
+                                                ->minValue(1)
+                                                ->default(1)
+                                                ->required()
+                                                ->rules([
+                                                    fn (Forms\Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                                        $productoId = $get('id_producto');
+                                                        if (!$productoId) return;
+
+                                                        $producto = \App\Models\Productos::find($productoId);
+                                                        if (!$producto) return;
+
+                                                        if ($value > $producto->stock_actual) {
+                                                            $fail("Stock insuficiente. Máximo disponible: {$producto->stock_actual}");
+                                                        }
+                                                    },
+                                                ])
+                                                ->columnSpan(['md' => 3]),
+                                        ]),
+                                ])
+                                ->defaultItems(1)
+                                ->addActionLabel('➕ Agregar otro producto')
+                                ->reorderable()
+                                ->collapsible()
+                                ->itemLabel(function (array $state): string {
+                                    $producto = $state['id_producto'] ? \App\Models\Productos::find($state['id_producto']) : null;
+                                    return $producto?->nombre ?? 'Producto no seleccionado';
+                                })
+                                ->columnSpan('full')
+                                ->minItems(1)
+                                ->required(),
+                        ]),
+                ])
+                ->skippable()
+                ->columnSpan('full'),
+            ]);
     }
 
     public static function table(Table $table): Table

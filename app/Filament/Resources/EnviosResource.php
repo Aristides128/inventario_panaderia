@@ -34,152 +34,141 @@ class EnviosResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Tabs::make('Tabs')
-                    ->tabs([
-                        // Datos generales del envío
-                        Forms\Components\Tabs\Tab::make('Datos_envio')
-                            ->icon('heroicon-o-truck')
-                            ->schema([
-                                Forms\Components\Grid::make(2)
-                                    ->schema([
-                                        Forms\Components\Card::make()
-                                            ->schema([
-                                                Forms\Components\Select::make('id_sucursal')
-                                                    ->label('Sucursal Origen')
-                                                    ->relationship('Sucursales', 'nombre')
-                                                    ->searchable()
-                                                    ->prefixIcon('heroicon-o-truck')
+                Forms\Components\Wizard::make([
+                    // ── Paso 1: Datos Generales ──────────────────────────────────────
+                    Forms\Components\Wizard\Step::make('Datos generales')
+                        ->label('Datos generales')
+                        ->description('Fecha y sucursales origen/destino')
+                        ->icon('heroicon-o-truck')
+                        ->completedIcon('heroicon-o-check-circle')
+                        ->schema([
+                            Forms\Components\Grid::make(3)
+                                ->schema([
+                                    DatePicker::make('fecha_envio')
+                                        ->label('Fecha de envío')
+                                        ->placeholder('Seleccione la fecha')
+                                        ->required()
+                                        ->prefixIcon('heroicon-o-calendar')
+                                        ->default(now())
+                                        ->closeOnDateSelection()
+                                        ->native(false)
+                                        ->minDate(now()),
 
-                                                    ->hint('Ingrese sucursal de origen')
-                                                    ->hintIcon('heroicon-m-information-circle')
-                                                    ->hintColor('primary')
-                                                    ->preload()
-                                                    ->required()
-                                                    ->columnSpanFull(),
-                                            ]),
+                                    Forms\Components\Select::make('id_sucursal')
+                                        ->label('Sucursal Origen')
+                                        ->relationship('Sucursales', 'nombre')
+                                        ->placeholder('Seleccione sucursal de origen')
+                                        ->searchable()
+                                        ->prefixIcon('heroicon-o-building-storefront')
+                                        ->preload()
+                                        ->required(),
 
-                                        Forms\Components\Card::make()
-                                            ->schema([
-                                                Forms\Components\Select::make('sucursal_destino_id')
-                                                    ->label('Sucursal Destino')
-                                                    ->relationship('Sucursales', 'nombre')
-                                                    ->searchable()
-                                                    ->prefixIcon('heroicon-o-truck')
-                                                    ->hint('Ingrese sucursal de destino')
-                                                    ->hintColor('primary')
-                                                    ->hintIcon('heroicon-m-information-circle')
-                                                    ->preload()
-                                                    ->required()
-                                                    ->columnSpanFull(),
-                                            ]),
-                                    ]),
+                                    Forms\Components\Select::make('sucursal_destino_id')
+                                        ->label('Sucursal Destino')
+                                        ->relationship('Sucursales', 'nombre')
+                                        ->placeholder('Seleccione sucursal de destino')
+                                        ->searchable()
+                                        ->prefixIcon('heroicon-o-map-pin')
+                                        ->preload()
+                                        ->required(),
+                                ]),
+                        ]),
 
-                                Forms\Components\Card::make()
-                                    ->schema([
-                                        Forms\Components\Grid::make(2)
-                                            ->schema([
-                                                DatePicker::make('fecha_envio')
-                                                    ->label('Fecha de envío')
-                                                    ->required()
-                                                    ->prefixIcon('heroicon-o-calendar')
-                                                    ->default(now())
-                                                    ->closeOnDateSelection()
-                                                    ->hint('Ingrese fecha de envio')
-                                                    ->hintColor('primary')
-                                                    ->hintIcon('heroicon-m-information-circle')
-                                                    ->native(false)
-                                                    ->minDate(now()),
-                                            ]),
-                                    ]),
+                    // ── Paso 2: Productos ────────────────────────────────────────────
+                    Forms\Components\Wizard\Step::make('Productos')
+                        ->label('Agregar productos')
+                        ->description('Detalle de los productos a enviar')
+                        ->icon('heroicon-o-cube')
+                        ->completedIcon('heroicon-o-check-circle')
+                        ->schema([
+                            Forms\Components\Repeater::make('envios')
+                                ->label('')
+                                ->schema([
+                                    Forms\Components\Grid::make(12)
+                                        ->schema([
+                                            Forms\Components\Select::make('id_producto')
+                                                ->label('Producto a enviar')
+                                                ->required()
+                                                ->searchable()
+                                                ->prefixIcon('heroicon-o-shopping-bag')
+                                                ->placeholder('Seleccione un producto')
+                                                ->hint(fn ($get) => $get('id_producto') ? "Disponible: " . (\App\Models\Productos::find($get('id_producto'))?->stock_actual ?? 0) . " u." : null)
+                                                ->hintIcon('heroicon-m-information-circle')
+                                                ->hintColor('info')
+                                                ->options(function () {
+                                                    return \App\Models\Productos::all()->mapWithKeys(function ($producto) {
+                                                        $formato = $producto->stock_actual > 0 
+                                                            ? "{$producto->nombre} (Stock: {$producto->stock_actual})" 
+                                                            : "{$producto->nombre} (SIN STOCK)";
+                                                        return [$producto->id_producto => $formato];
+                                                    });
+                                                })
+                                                ->afterStateUpdated(function ($state, callable $set) {
+                                                    if (!$state) return;
+                                                    $set('cantidad', null);
+                                                })
+                                                ->reactive()
+                                                ->preload()
+                                                ->columnSpan(['md' => 8]),
 
-                                Forms\Components\Card::make()
-                                    ->schema([
-                                        Forms\Components\Textarea::make('observaciones')
-                                            ->label('Observaciones')
-                                            ->hint('Ingrese sucursal de destino')
-                                            ->hintColor('primary')
-                                            ->hintIcon('heroicon-m-information-circle')
-                                            ->placeholder('Ingrese cualquier observación relevante sobre el envío')
-                                            ->helperText('Ej: Productos frágiles, horario de entrega preferente, etc.')
-                                            ->required()
-                                            ->columnSpanFull(),
-                                    ]),
-                            ]),
+                                            Forms\Components\TextInput::make('cantidad')
+                                                ->label('Cantidad a enviar')
+                                                ->placeholder('Ej: 10')
+                                                ->prefixIcon('heroicon-o-clipboard-document-list')
+                                                ->required()
+                                                ->numeric()
+                                                ->default(1)
+                                                ->minValue(1)
+                                                ->rules([
+                                                    fn (Forms\Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                                        $productoId = $get('id_producto');
+                                                        if (!$productoId) return;
 
-                        // Segundo paso
-                        Forms\Components\Tabs\Tab::make('Productos')
-                            ->icon('heroicon-o-cube')
-                            ->schema([
-                                Forms\Components\Card::make()
-                                    ->schema([
-                                        Forms\Components\Repeater::make('envios')
-                                            ->schema([
-                                                Forms\Components\Grid::make(2)
-                                                    ->schema([
-                                                        Forms\Components\Select::make('id_producto')
-                                                            ->label('Producto a enviar')
-                                                            ->required()
-                                                            ->searchable()
-                                                            ->prefixIcon('heroicon-o-shopping-bag')
-                                                            ->placeholder('Seleccione un producto')
-                                                            ->hint(fn ($get) => $get('id_producto') ? "Disponible: " . (\App\Models\Productos::find($get('id_producto'))?->stock_actual ?? 0) . " unidades" : null)
-                                                            ->hintIcon('heroicon-m-information-circle')
-                                                            ->hintColor('info')
-                                                            ->options(function () {
-                                                                return \App\Models\Productos::all()->mapWithKeys(function ($producto) {
-                                                                    $formato = $producto->stock_actual > 0 
-                                                                        ? "{$producto->nombre} (Stock: {$producto->stock_actual})" 
-                                                                        : "{$producto->nombre} (SIN STOCK)";
-                                                                    return [$producto->id_producto => $formato];
-                                                                });
-                                                            })
-                                                            ->afterStateUpdated(function ($state, callable $set) {
-                                                                if (!$state) return;
-                                                                $set('cantidad', null);
-                                                            })
-                                                            ->reactive()
-                                                            ->preload(),
+                                                        $producto = \App\Models\Productos::find($productoId);
+                                                        if (!$producto) return;
 
-                                                        Forms\Components\TextInput::make('cantidad')
-                                                            ->label('Cantidad a enviar')
-                                                            ->placeholder('Ingrese la cantidad')
-                                                            ->prefixIcon('heroicon-o-clipboard-document-list')
-                                                            ->required()
-                                                            ->numeric()
-                                                            ->default(0)
-                                                            ->rules([
-                                                                fn (Forms\Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                                                    $productoId = $get('id_producto');
-                                                                    if (!$productoId) return;
+                                                        if ($value > $producto->stock_actual) {
+                                                            $fail("Stock insuficiente en lotes. Máximo disponible: {$producto->stock_actual}");
+                                                        }
+                                                    },
+                                                ])
+                                                ->columnSpan(['md' => 4]),
+                                        ])
+                                ])
+                                ->cloneable()
+                                ->createItemButtonLabel('➕ Agregar otro producto')
+                                ->defaultItems(1)
+                                ->minItems(1)
+                                ->collapsible()
+                                ->itemLabel(function (array $state): string {
+                                    $producto = $state['id_producto'] ? \App\Models\Productos::find($state['id_producto']) : null;
+                                    return $producto?->nombre ?? 'Producto no seleccionado';
+                                })
+                                ->columnSpanFull(),
+                        ]),
 
-                                                                    $producto = \App\Models\Productos::find($productoId);
-                                                                    if (!$producto) return;
+                    // ── Paso 3: Resumen ──────────────────────────────────────────────
+                    Forms\Components\Wizard\Step::make('Resumen')
+                        ->label('Resumen y observaciones')
+                        ->description('Revisión final antes de guardar')
+                        ->icon('heroicon-o-document-check')
+                        ->completedIcon('heroicon-o-check-circle')
+                        ->schema([
+                            Forms\Components\Textarea::make('observaciones')
+                                ->label('📝 Observaciones')
+                                ->hint('Notas adicionales del envío')
+                                ->hintColor('primary')
+                                ->hintIcon('heroicon-m-information-circle')
+                                ->placeholder('Ej: Productos frágiles, horario de entrega preferente, etc.')
+                                ->required()
+                                ->rows(4)
+                                ->columnSpanFull(),
+                        ]),
 
-                                                                    if ($value > $producto->stock_actual) {
-                                                                        $fail("Stock insuficiente en lotes. Máximo disponible: {$producto->stock_actual}");
-                                                                    }
-                                                                },
-                                                            ])
-
-
-                                                    ])
-                                            ])
-                                            ->createItemButtonLabel('Agregar otro envío')
-                                            ->defaultItems(2)
-                                            ->addActionLabel('Agregar otro envío')
-                                            ->columns(1)
-                                            ->columnSpanFull()
-                                            ->collapsible(),
-
-                                    ]),
-                            ]),
-
-                    ])
-                    ->columnSpan('full')
-                    ->persistTabInQueryString(),
-
-            ])
-            ->columns(1);
+                ])
+                ->skippable()
+                ->columnSpanFull(),
+            ]);
     }
 
     public static function table(Table $table): Table

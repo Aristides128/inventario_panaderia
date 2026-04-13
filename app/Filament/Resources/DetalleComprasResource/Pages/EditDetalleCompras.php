@@ -5,6 +5,9 @@ namespace App\Filament\Resources\DetalleComprasResource\Pages;
 use App\Filament\Resources\DetalleComprasResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Carbon\Carbon;
+use App\Models\lotes;
+
 
 class EditDetalleCompras extends EditRecord
 {
@@ -33,10 +36,10 @@ class EditDetalleCompras extends EditRecord
         }
 
         // Registrar entrada de inventario SÓLO si el estado ACABA de cambiar a 'Recibido'
-        if ($compra->wasChanged('estado_compra') && $compra->estado_compra === 'Recibido') {
-            $fechaCompra = \Carbon\Carbon::parse($compra->fecha_compra);
+        if ($compra->estado_compra === 'Recibido') {
+            $fechaCompra = Carbon::parse($compra->fecha_compra);
             
-            $lote = \App\Models\Lotes::firstOrCreate([
+            $lote = lotes::firstOrCreate([
                 'semana' => $fechaCompra->weekOfYear,
                 'anio' => $fechaCompra->year
             ], [

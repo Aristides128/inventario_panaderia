@@ -10,7 +10,11 @@ mkdir -p storage/framework/cache/data \
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
-# Limpiar caches previas para asegurar que Laravel lea las variables de entorno de la nube
+# Eliminar cachés obsoletas del entorno local (como Pail o paquetes de desarrollo)
+rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php
+
+# Redescubrir paquetes instalados en producción
+php artisan package:discover || true
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true

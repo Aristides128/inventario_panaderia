@@ -15,10 +15,11 @@ php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
-# Crear enlace simbólico de almacenamiento público
+# Crear enlace simbólico de almacenamiento público y publicar assets de Filament
 if [ ! -L public/storage ]; then
     php artisan storage:link || true
 fi
+php artisan filament:assets || true
 
 # Ejecutar migraciones automáticamente si se habilita la variable de entorno
 if [ "$AUTO_MIGRATE" = "true" ]; then

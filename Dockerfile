@@ -78,6 +78,9 @@ COPY --from=composer-builder /app/vendor ./vendor
 # Copiar assets frontend compilados por Vite desde Stage 1
 COPY --from=frontend-builder /app/public/build ./public/build
 
+# Publicar assets de Filament directamente dentro de la imagen Docker
+RUN php artisan filament:assets || true
+
 # Copiar y configurar el script de inicio
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint

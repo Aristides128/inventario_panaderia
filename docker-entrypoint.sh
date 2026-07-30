@@ -5,12 +5,13 @@ mkdir -p storage/framework/cache/data \
          storage/framework/sessions \
          storage/framework/views \
          storage/logs \
-         bootstrap/cache
+         bootstrap/cache \
+         storage/app/public/images
 
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
-# Eliminar cachés obsoletas del entorno local (como Pail o paquetes de desarrollo)
+# Eliminar cachés obsoletas del entorno local
 rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php
 
 # Redescubrir paquetes instalados en producción
@@ -19,10 +20,9 @@ php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
-# Crear enlace simbólico de almacenamiento público y publicar assets de Filament
-if [ ! -L public/storage ]; then
-    php artisan storage:link || true
-fi
+# Recrear el enlace simbólico de almacenamiento público para la imagen del logo
+rm -rf public/storage
+php artisan storage:link --force || true
 php artisan filament:assets || true
 
 # Ejecutar migraciones automáticamente si se habilita la variable de entorno

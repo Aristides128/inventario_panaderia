@@ -1,26 +1,5 @@
 # ============================================
-# Stage 1: Build Frontend Assets (Vite / Tailwind CSS)
-# ============================================
-FROM node:20-alpine AS frontend-builder
-
-WORKDIR /app
-
-# Copiar manifiestos de paquetes
-COPY package.json package-lock.json* ./
-
-# Instalar dependencias para la compilación frontend
-RUN npm ci || npm install
-
-# Copiar recursos y configuración de Vite
-COPY vite.config.js ./
-COPY resources/ ./resources/
-COPY public/ ./public/
-
-# Compilar assets de producción (salida en public/build)
-RUN npm run build
-
-# ============================================
-# Stage 2: Install PHP Production Dependencies
+# Stage 1: Install PHP Production Dependencies (Composer)
 # ============================================
 FROM composer:latest AS composer-builder
 
@@ -39,13 +18,13 @@ RUN composer install \
     --ignore-platform-reqs
 
 # ============================================
-# Stage 3: Final Ultra-Lightweight Production Image (Alpine Linux ~170MB)
+# Stage 2: Final Ultra-Lightweight Production Image (Alpine Linux ~170MB)
 # ============================================
 FROM php:8.3-cli-alpine AS production
 
 LABEL maintainer="inventario_panaderia"
 
-# Instalar librerías de sistema de Alpine y compilar extensiones PHP
+# Instalar librerías de sistema de Alpine y compilar extensiones PHP requeridas por Laravel y Filament
 RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev \
@@ -69,11 +48,8 @@ WORKDIR /var/www/html
 # Copiar código fuente de la aplicación
 COPY . .
 
-# Copiar dependencias de producción de PHP desde Stage 2
+# Copiar dependencias de producción de PHP desde Stage 1
 COPY --from=composer-builder /app/vendor ./vendor
-
-# Copiar assets frontend compilados desde Stage 1
-COPY --from=frontend-builder /app/public/build ./public/build
 
 # Copiar y configurar el script de inicio
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint

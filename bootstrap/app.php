@@ -4,8 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-return Application::configure(basePath: dirname(__DIR__))
-    ->withStoragePath(env('APP_STORAGE_PATH', dirname(__DIR__).'/storage'))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -17,3 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+
+if (getenv('APP_STORAGE_PATH')) {
+    $app->useStoragePath(getenv('APP_STORAGE_PATH'));
+}
+
+return $app;

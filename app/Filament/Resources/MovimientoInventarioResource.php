@@ -17,7 +17,7 @@ class MovimientoInventarioResource extends Resource
 {
     protected static ?string $model = MovimientoInventario::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
     
     protected static ?string $navigationGroup = '📊 Reportes';
     
@@ -32,7 +32,7 @@ class MovimientoInventarioResource extends Resource
             ->schema([
                 Forms\Components\Card::make()
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
                             ->schema([
                                 Forms\Components\Select::make('id_producto')
                                     ->label('Producto')
@@ -107,7 +107,8 @@ class MovimientoInventarioResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-o-cube')
-                    ->color('primary'),
+                    ->color('primary')
+                    ->wrap(),
                 Tables\Columns\BadgeColumn::make('tipo_movimiento')
                     ->label('Tipo')
                     ->colors([
@@ -138,7 +139,8 @@ class MovimientoInventarioResource extends Resource
                         'warning' => 'PRODUCCION',
                         'info' => 'ENVIO',
                         'secondary' => 'AJUSTE',
-                    ]),
+                    ])
+                    ->visibleFrom('sm'),
                 Tables\Columns\TextColumn::make('referencia_id')
                     ->label('ID Ref.')
                     ->numeric()

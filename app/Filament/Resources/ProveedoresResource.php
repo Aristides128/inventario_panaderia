@@ -20,7 +20,7 @@ class ProveedoresResource extends Resource
 {
     protected static ?string $model = Proveedores::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static ?string $navigationGroup = "📦 Gestión de productos";
 
@@ -32,7 +32,7 @@ class ProveedoresResource extends Resource
             ->schema([
                 Forms\Components\Card::make()
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
                             ->schema([
                                 Forms\Components\TextInput::make('nombre')
                                     ->label('Nombre del Proveedor')
@@ -40,10 +40,7 @@ class ProveedoresResource extends Resource
                                     ->autocomplete('off')
                                     ->placeholder('Ej: Distribuidora Pan S.A.')
                                     ->maxLength(100)
-                                    ->prefixIcon('heroicon-o-building-storefront')
-                                    ->hint('Nombre completo de la empresa')
-                                    ->hintIcon('heroicon-o-information-circle')
-                                    ->hintColor('primary'),
+                                    ->prefixIcon('heroicon-o-building-storefront'),
 
                                 Forms\Components\TextInput::make('telefono')
                                     ->label('Teléfono')
@@ -52,10 +49,7 @@ class ProveedoresResource extends Resource
                                     ->autocomplete('off')
                                     ->maxLength(20)
                                     ->prefixIcon('heroicon-o-phone')
-                                    ->placeholder('+52 123 456 7890')
-                                    ->hint('Incluir código de país y área')
-                                    ->hintIcon('heroicon-o-information-circle')
-                                    ->hintColor('primary'),
+                                    ->placeholder('+52 123 456 7890'),
 
                                 Forms\Components\TextInput::make('email')
                                     ->label('Correo Electrónico')
@@ -64,10 +58,7 @@ class ProveedoresResource extends Resource
                                     ->maxLength(100)
                                     ->default(null)
                                     ->prefixIcon('heroicon-o-envelope')
-                                    ->placeholder('contacto@proveedor.com')
-                                    ->hint('Correo de contacto principal')
-                                    ->hintIcon('heroicon-o-information-circle')
-                                    ->hintColor('primary'),
+                                    ->placeholder('contacto@proveedor.com'),
 
                                 Forms\Components\Textarea::make('direccion')
                                     ->label('Dirección')
@@ -76,13 +67,10 @@ class ProveedoresResource extends Resource
                                     ->autocomplete('off')
                                     ->placeholder('Calle, Número, Colonia, C.P., Ciudad, Estado')
                                     ->helperText('Ingrese la dirección completa para envíos')
-                                    ->hint('Máximo 255 caracteres')
-                                    ->hintIcon('heroicon-o-information-circle')
-                                    ->hintColor('primary')
                                     ->columnSpan('full')
                                     ->rows(2),
                             ])
-                            ->columns(2)
+                            ->columns(['default' => 1, 'sm' => 2])
                             ->extraAttributes(['class' => 'gap-4']),
                     ])
                     ->columnSpan('lg')
@@ -111,43 +99,44 @@ class ProveedoresResource extends Resource
                     ->icon('heroicon-o-phone')
                     ->iconColor('primary')
                     ->searchable()
-                    ->sortable(),
-
+                    ->sortable()
+                    ->visibleFrom('sm'),
 
                 Tables\Columns\TextColumn::make('direccion')
                     ->label('Dirección')
                     ->icon('heroicon-o-map-pin')
                     ->iconColor('primary')
                     ->searchable()
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Registro')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->icon('heroicon-o-calendar')
                     ->color('gray')
                     ->description(fn(Proveedores $record) => 'Actualizado: ' . $record->updated_at->diffForHumans())
             ])
             ->filters([
                 TrashedFilter::make()
-
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->tooltip('Ver proveedor')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
-                Tables\Actions\EditAction::make()
-                    ->tooltip('Editar proveedor')
-                    ->icon('heroicon-o-pencil')
-                    ->color('success'),
-                Tables\Actions\DeleteAction::make()
-                    ->tooltip('Eliminar proveedor')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->tooltip('Ver proveedor')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
+                    Tables\Actions\EditAction::make()
+                        ->tooltip('Editar proveedor')
+                        ->icon('heroicon-o-pencil')
+                        ->color('success'),
+                    Tables\Actions\DeleteAction::make()
+                        ->tooltip('Eliminar proveedor')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

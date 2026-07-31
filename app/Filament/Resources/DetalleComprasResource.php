@@ -29,6 +29,11 @@ class DetalleComprasResource extends Resource
 
   protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
+  public static function getNavigationBadge(): ?string
+  {
+      return (string) static::getModel()::count();
+  }
+
   protected static ?string $navigationGroup = "📦 Gestión de productos";
 
   protected static ?int $navigationSort = 4;
@@ -48,7 +53,7 @@ class DetalleComprasResource extends Resource
             ->icon('heroicon-o-building-storefront')
             ->completedIcon('heroicon-o-check-circle')
             ->schema([
-              Forms\Components\Grid::make(3)
+              Forms\Components\Grid::make(['default' => 1, 'md' => 3])
                 ->schema([
                   DatePicker::make('fecha_compra')
                     ->label('Fecha de la compra')
@@ -104,7 +109,7 @@ class DetalleComprasResource extends Resource
                       ->live()
                       ->prefixIcon('heroicon-o-user')
                       ->afterStateUpdated(fn($state, callable $set) => $set('id_producto', null))
-                      ->columnSpan(['md' => 4]),
+                      ->columnSpan(['default' => 12, 'md' => 4]),
 
                     Select::make('id_producto')
                       ->label('Producto')
@@ -155,7 +160,7 @@ class DetalleComprasResource extends Resource
                         $set('subtotal', ($packets * $units) * $precioBase);
                         $set('total_unidades', $packets * $units);
                       })
-                      ->columnSpan(['md' => 5]),
+                      ->columnSpan(['default' => 12, 'md' => 5]),
 
                     Forms\Components\DatePicker::make('fecha_vencimiento')
                       ->label('Vencimiento')
@@ -164,7 +169,7 @@ class DetalleComprasResource extends Resource
                       ->prefixIcon('heroicon-o-calendar')
                       ->closeOnDateSelection()
                       ->native(false)
-                      ->columnSpan(['md' => 3]),
+                      ->columnSpan(['default' => 12, 'md' => 3]),
 
                     Forms\Components\TextInput::make('cantidad_paquetes')
                       ->label('Paquetes')
@@ -181,7 +186,7 @@ class DetalleComprasResource extends Resource
                         $set('subtotal', ($cantidadPaquetes * $cantidadProducto) * $precioUnitario);
                         $set('total_unidades', $cantidadPaquetes * $cantidadProducto);
                       })
-                      ->columnSpan(['md' => 2]),
+                      ->columnSpan(['default' => 6, 'md' => 2]),
 
                     Forms\Components\TextInput::make('cantidad_producto')
                       ->label('U. / Paquete')
@@ -198,7 +203,7 @@ class DetalleComprasResource extends Resource
                         $set('subtotal', ($cantidadPaquetes * $cantidad) * $precioUnitario);
                         $set('total_unidades', $cantidadPaquetes * $cantidad);
                       })
-                      ->columnSpan(['md' => 2]),
+                      ->columnSpan(['default' => 6, 'md' => 2]),
 
                     Forms\Components\TextInput::make('precio_unitario')
                       ->label('Precio Unit. ($)')
@@ -215,7 +220,7 @@ class DetalleComprasResource extends Resource
                         $cantidadProducto = max(1, $get('cantidad_producto') ?? 1);
                         $set('subtotal', ($cantidadPaquetes * $cantidadProducto) * $state);
                       })
-                      ->columnSpan(['md' => 2]),
+                      ->columnSpan(['default' => 6, 'md' => 2]),
 
                     Forms\Components\TextInput::make('total_unidades')
                       ->label('Total Unid.')
@@ -224,7 +229,7 @@ class DetalleComprasResource extends Resource
                       ->extraInputAttributes(['class' => 'bg-gray-100 cursor-not-allowed opacity-70 pointer-events-none dark:bg-gray-800'])
                       ->dehydrated(false)
                       ->prefixIcon('heroicon-o-calculator')
-                      ->columnSpan(['md' => 3]),
+                      ->columnSpan(['default' => 6, 'md' => 3]),
 
                     Forms\Components\TextInput::make('subtotal')
                       ->label('Subtotal ($)')
@@ -232,9 +237,9 @@ class DetalleComprasResource extends Resource
                       ->readonly()
                       ->prefixIcon('heroicon-o-currency-dollar')
                       ->extraInputAttributes(['class' => 'bg-gray-100 cursor-not-allowed opacity-70 font-bold text-primary-600 pointer-events-none dark:bg-gray-800'])
-                      ->columnSpan(['md' => 3]),
+                      ->columnSpan(['default' => 12, 'md' => 3]),
 
-                  ]), // End Grid
+                  ]),
                 ])
                 ->cloneable()
                 ->createItemButtonLabel('➕ Agregar otro producto')
@@ -262,14 +267,10 @@ class DetalleComprasResource extends Resource
             ->schema([
               Forms\Components\Textarea::make('observaciones')
                 ->label('📝 Observaciones')
-                ->hint('Notas adicionales de la compra (opcional)')
                 ->placeholder('Ej: Entrega pendiente de verificación, factura #1234...')
-                ->hintColor('primary')
-                ->hintIcon('heroicon-m-information-circle')
                 ->rows(4)
                 ->columnSpanFull(),
 
-              // Botón PDF — solo visible en modo "Ver"
               Forms\Components\Placeholder::make('descargar_pdf')
                 ->label('')
                 ->content(function ($livewire) {
@@ -316,7 +317,7 @@ class DetalleComprasResource extends Resource
             ]),
 
         ])
-        ->skippable()          // permite saltar pasos al editar
+        ->skippable()
         ->columnSpanFull(),
       ]);
   }
@@ -325,7 +326,6 @@ class DetalleComprasResource extends Resource
   {
     return $table
       ->columns([
-
         Tables\Columns\TextColumn::make('fecha_compra')
           ->label('Fecha de compra')
           ->date()
@@ -333,7 +333,8 @@ class DetalleComprasResource extends Resource
         Tables\Columns\TextColumn::make('Sucursales.nombre')
           ->label('Sucursal')
           ->searchable()
-          ->sortable(),
+          ->sortable()
+          ->wrap(),
         Tables\Columns\TextColumn::make('total')
           ->label('Precio total de la compra')
           ->numeric()
@@ -356,59 +357,54 @@ class DetalleComprasResource extends Resource
         TrashedFilter::make(),
       ])
       ->actions([
-        Tables\Actions\EditAction::make()
-          ->label('Editar')
-          ->tooltip('Editar compras')
-          ->visible(function (Compras $record) {
-            return $record->deleted_at === null;
-          })
-          ->icon('heroicon-o-pencil'),
+        Tables\Actions\ActionGroup::make([
+          Tables\Actions\ViewAction::make()
+            ->label('Ver')
+            ->tooltip('Ver compras')
+            ->icon('heroicon-o-eye')
+            ->color('info'),
 
-        RestoreAction::make()
-          ->tooltip('Restaurar compras')
-          ->visible(function (Compras $record) {
-            return $record->deleted_at !== null;
-          }),
+          Tables\Actions\EditAction::make()
+            ->label('Editar')
+            ->tooltip('Editar compras')
+            ->visible(fn (Compras $record) => $record->deleted_at === null)
+            ->icon('heroicon-o-pencil'),
 
-        Tables\Actions\DeleteAction::make()
-          ->label('Eliminar')
-          ->tooltip('Eliminar compras')
-          ->visible(function (Compras $record) {
-            return $record->deleted_at === null;
-          })
-          ->icon('heroicon-o-trash'),
+          RestoreAction::make()
+            ->tooltip('Restaurar compras')
+            ->visible(fn (Compras $record) => $record->deleted_at !== null),
 
-        Tables\Actions\ViewAction::make()
-          ->label('Ver')
-          ->tooltip('Ver compras')
-          ->icon('heroicon-o-eye')
-          ->color('info'),
-        ForceDeleteAction::make()
-          ->label('Borrado definitivo')
-          ->icon('heroicon-o-trash')
-          ->color('danger')
-          ->requiresConfirmation()
-          ->modalHeading('¿Eliminar compras?')
-          ->modalDescription('¿Estás seguro de que deseas eliminar esta compra? Esta acción no se puede deshacer.')
-          ->modalSubmitActionLabel('Sí, eliminar')
-          ->modalCancelActionLabel('Cancelar')
-          ->action(function (Compras $record) {
-            $record->forceDelete();
-          })
-          ->tooltip('Eliminar definitivamente'),
+          Tables\Actions\DeleteAction::make()
+            ->label('Eliminar')
+            ->tooltip('Eliminar compras')
+            ->visible(fn (Compras $record) => $record->deleted_at === null)
+            ->icon('heroicon-o-trash'),
+
+          ForceDeleteAction::make()
+            ->label('Borrado definitivo')
+            ->icon('heroicon-o-trash')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('¿Eliminar compras?')
+            ->modalDescription('¿Estás seguro de que deseas eliminar esta compra? Esta acción no se puede deshacer.')
+            ->modalSubmitActionLabel('Sí, eliminar')
+            ->modalCancelActionLabel('Cancelar')
+            ->action(fn (Compras $record) => $record->forceDelete())
+            ->tooltip('Eliminar definitivamente'),
+        ]),
       ])
       ->bulkActions([
-        // Restauración multiple de datos eliminados logícamente
-        Tables\Actions\RestoreBulkAction::make()
-          ->color('success')
-          ->label('Restaurar registros')
-          ->tooltip('Restaurar compras'),
+        Tables\Actions\BulkActionGroup::make([
+          Tables\Actions\RestoreBulkAction::make()
+            ->color('success')
+            ->label('Restaurar registros')
+            ->tooltip('Restaurar compras'),
 
-        // Borrado definitivo multiple de datos eliminados logícamente
-        Tables\Actions\ForceDeleteBulkAction::make()
-          ->color('danger')
-          ->label('Borrar registros definitivamente')
-          ->tooltip('Borrar definitivamente compras')
+          Tables\Actions\ForceDeleteBulkAction::make()
+            ->color('danger')
+            ->label('Borrar registros definitivamente')
+            ->tooltip('Borrar definitivamente compras')
+        ]),
       ])
       ->recordUrl(null)
       ->recordAction(null);

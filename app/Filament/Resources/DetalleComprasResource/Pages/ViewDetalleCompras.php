@@ -39,7 +39,7 @@ class ViewDetalleCompras extends ViewRecord
                     ->description('Detalles completos de la compra realizada')
                     ->icon('heroicon-o-shopping-cart')
                     ->schema([
-                        Infolists\Components\Grid::make(3)
+                        Infolists\Components\Grid::make(['default' => 1, 'sm' => 3])
                             ->schema([
                                 Infolists\Components\TextEntry::make('id_compra')
                                     ->label('ID de Compra')
@@ -69,7 +69,7 @@ class ViewDetalleCompras extends ViewRecord
                                     }),
                             ]),
                         
-                        Infolists\Components\Grid::make(2)
+                        Infolists\Components\Grid::make(['default' => 1, 'sm' => 2])
                             ->schema([
                                 Infolists\Components\TextEntry::make('Sucursales.nombre')
                                     ->label('Sucursal')
@@ -102,7 +102,7 @@ class ViewDetalleCompras extends ViewRecord
                             ->schema([
                                 Infolists\Components\Card::make()
                                     ->schema([
-                                        Infolists\Components\Grid::make(2)
+                                        Infolists\Components\Grid::make(['default' => 1, 'md' => 2])
                                             ->schema([
                                                 Infolists\Components\Group::make([
                                                     Infolists\Components\TextEntry::make('producto.nombre')
@@ -140,7 +140,7 @@ class ViewDetalleCompras extends ViewRecord
                                                 ]),
                                             ]),
                                         
-                                        Infolists\Components\Grid::make(3)
+                                        Infolists\Components\Grid::make(['default' => 1, 'sm' => 3])
                                             ->schema([
                                                 Infolists\Components\TextEntry::make('precio_unitario')
                                                     ->label('Precio Unitario')
@@ -170,7 +170,7 @@ class ViewDetalleCompras extends ViewRecord
                 Infolists\Components\Section::make('Resumen Total')
                     ->icon('heroicon-o-calculator')
                     ->schema([
-                        Infolists\Components\Grid::make(3)
+                        Infolists\Components\Grid::make(['default' => 1, 'sm' => 3])
                             ->schema([
                                 Infolists\Components\TextEntry::make('detalleCompras')
                                     ->label('Total de Productos')

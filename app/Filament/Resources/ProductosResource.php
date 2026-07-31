@@ -30,9 +30,19 @@ class ProductosResource extends Resource
 {
     protected static ?string $model = Productos::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-archive-box';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
     protected static ?string $navigationGroup = "📦 Gestión de productos";
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'primary';
+    }
 
     protected static ?int $navigationSort = 3;
 
@@ -42,13 +52,11 @@ class ProductosResource extends Resource
             ->schema([
                 Forms\Components\Card::make()
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
                             ->schema([
                                 Forms\Components\TextInput::make('nombre')
                                     ->label('Nombre del Producto')
                                     ->placeholder('Ej: Pan Integral, Pastel de Chocolate...')
-                                    ->hint('Ingrese el nombre del producto')
-                                    ->hintIcon('heroicon-m-information-circle')
                                     ->prefixIcon('heroicon-o-user')
                                     ->required()
                                     ->maxLength(100),
@@ -60,15 +68,11 @@ class ProductosResource extends Resource
                                     ->preload()
                                     ->searchable()
                                     ->required()
-                                    ->hint('Seleccione la categoría del producto')
-                                    ->hintIcon('heroicon-m-information-circle')
                                     ->prefixIcon('heroicon-o-user'),
 
                                 Forms\Components\Select::make('unidad_medida')
                                     ->placeholder('Seleccione una unidad de medida')
                                     ->label('Unidad de Medida')
-                                    ->hint('Seleccione la unidad de medida')
-                                    ->hintIcon('heroicon-m-information-circle')
                                     ->prefixIcon('heroicon-o-user')
                                     ->options([
                                         'unidad' => 'Unidad',
@@ -85,15 +89,12 @@ class ProductosResource extends Resource
                                     ->label('Precio Base (Q)')
                                     ->numeric()
                                     ->prefixIcon('heroicon-o-currency-dollar')
-                                    ->hint('Precio base sugerido para compras')
                                     ->required()
                                     ->default(0),
 
                                 Forms\Components\Textarea::make('descripcion')
                                     ->label('Descripción')
                                     ->required()
-                                    ->hint('Descripción detallada del producto')
-                                    ->hintIcon('heroicon-m-information-circle')
                                     ->placeholder('Ingrese una descripción detallada del producto')
                                     ->maxLength(255)
                                     ->columnSpan('full')
@@ -115,11 +116,11 @@ class ProductosResource extends Resource
                     ->sortable()
                     ->icon('heroicon-o-building-storefront')
                     ->iconColor('primary')
-                    // ->description(fn(Productos $record): string => $record->categoria->nombre ?: 'Sin producto')
                     ->wrap(),
                 Tables\Columns\TextColumn::make('descripcion')
                     ->label('Descripción')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('stock_actual')
                     ->label('Stock')
                     ->numeric()
@@ -128,7 +129,8 @@ class ProductosResource extends Resource
                 Tables\Columns\TextColumn::make('unidad_medida')
                     ->label('Unidad de Medida')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('sm'),
                 Tables\Columns\TextColumn::make('precio_base')
                     ->label('Precio Base ($)')
                     ->money('USD')
@@ -137,7 +139,7 @@ class ProductosResource extends Resource
                     ->label('Fecha de Creación')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->icon('heroicon-o-calendar')
                     ->color('gray')
                     ->description(fn(Productos $record) => 'Creado: ' . $record->created_at->diffForHumans())
@@ -156,192 +158,176 @@ class ProductosResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
-
-                Tables\Actions\Action::make('ajustar_stock')
-                    ->label('Ajustar Stock')
-                    ->icon('heroicon-o-adjustments-horizontal')
-                    ->color('warning')
-                    ->modalHeading('Ajustar Stock del Producto')
-                    ->modalDescription('Gestione el stock por lotes (Semanal).')
-                    ->form([
-                        Forms\Components\Select::make('tipo_movimiento')
-                            ->label('Tipo de Movimiento')
-                            ->options([
-                                'ENTRADA' => 'Entrada (Agregar Stock)',
-                                'SALIDA' => 'Salida (Reducir Stock)',
-                            ])
-                            ->default('ENTRADA')
-                            ->reactive()
-                            ->required(),
-                        
-                        // Solo para entradas: Fecha de Vencimiento
-                        Forms\Components\DatePicker::make('fecha_vencimiento')
-                            ->label('Fecha de Vencimiento')
-                            ->visible(fn (Forms\Get $get) => $get('tipo_movimiento') === 'ENTRADA'),
-
-                        // Solo para salidas: Selección de Lote
-                        Forms\Components\Select::make('id_lote_origen')
-                            ->label('Seleccionar Lote de Origen')
-                            ->options(function (Productos $record) {
-                                return detalle_lotes::where('id_producto', $record->id_producto)
-                                    ->where('cantidad', '>', 0)
-                                    ->join('lotes', 'detalle_lotes.id_lote', '=', 'lotes.id_lote')
-                                    ->orderBy('lotes.anio', 'asc')
-                                    ->orderBy('lotes.semana', 'asc')
-                                    ->get()
-                                    ->mapWithKeys(function ($item) {
-                                        return [$item->id_lote => "Lote #{$item->id_lote} (Sem: {$item->semana}, Año: {$item->anio}) - Disp: {$item->cantidad}"];
-                                    });
-                            })
-                            ->required(fn (Forms\Get $get) => $get('tipo_movimiento') === 'SALIDA')
-                            ->visible(fn (Forms\Get $get) => $get('tipo_movimiento') === 'SALIDA')
-                            ->searchable()
-                            ->preload(), // Added preload for better UX
-
-                        Forms\Components\TextInput::make('cantidad')
-                            ->label('Cantidad')
-                            ->numeric()
-                            ->required()
-                            ->minValue(1),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('ajustar_stock')
+                        ->label('Ajustar Stock')
+                        ->icon('heroicon-o-adjustments-horizontal')
+                        ->color('warning')
+                        ->modalHeading('Ajustar Stock del Producto')
+                        ->modalDescription('Gestione el stock por lotes (Semanal).')
+                        ->modalWidth('lg')
+                        ->form([
+                            Forms\Components\Select::make('tipo_movimiento')
+                                ->label('Tipo de Movimiento')
+                                ->options([
+                                    'ENTRADA' => 'Entrada (Agregar Stock)',
+                                    'SALIDA' => 'Salida (Reducir Stock)',
+                                ])
+                                ->default('ENTRADA')
+                                ->reactive()
+                                ->required(),
                             
-                        Forms\Components\Textarea::make('observaciones')
-                            ->label('Observaciones')
-                            ->rows(2),
-                    ])
-                    ->action(function (Productos $record, array $data): void {
-                        $cantidad = (int) $data['cantidad'];
-                        $tipo = $data['tipo_movimiento'];
-                        $cantidadAnteriorProducto = $record->stock_actual;
-                        $now = Carbon::now();
-                        
-                        $loteId = null;
+                            // Solo para entradas: Fecha de Vencimiento
+                            Forms\Components\DatePicker::make('fecha_vencimiento')
+                                ->label('Fecha de Vencimiento')
+                                ->visible(fn (Forms\Get $get) => $get('tipo_movimiento') === 'ENTRADA'),
 
-                        if ($tipo === 'ENTRADA') {
-                            // ENTRADA: Create/Find Weekly Lote
-                            $semana = $now->weekOfYear;
-                            $mes = $now->month;
-                            $anio = $now->year;
+                            // Solo para salidas: Selección de Lote
+                            Forms\Components\Select::make('id_lote_origen')
+                                ->label('Seleccionar Lote de Origen')
+                                ->options(function (Productos $record) {
+                                    return detalle_lotes::where('id_producto', $record->id_producto)
+                                        ->where('cantidad', '>', 0)
+                                        ->join('lotes', 'detalle_lotes.id_lote', '=', 'lotes.id_lote')
+                                        ->orderBy('lotes.anio', 'asc')
+                                        ->orderBy('lotes.semana', 'asc')
+                                        ->get()
+                                        ->mapWithKeys(function ($item) {
+                                            return [$item->id_lote => "Lote #{$item->id_lote} (Sem: {$item->semana}, Año: {$item->anio}) - Disp: {$item->cantidad}"];
+                                        });
+                                })
+                                ->required(fn (Forms\Get $get) => $get('tipo_movimiento') === 'SALIDA')
+                                ->visible(fn (Forms\Get $get) => $get('tipo_movimiento') === 'SALIDA')
+                                ->searchable()
+                                ->preload(),
 
-                            $lote = lotes::firstOrCreate(
-                                ['semana' => $semana, 'anio' => $anio],
-                                ['mes' => $mes]
-                            );
-                            $loteId = $lote->id_lote;
-
-                            // Create/Find Detail
-                            $detalleLote = detalle_lotes::firstOrCreate(
-                                ['id_lote' => $lote->id_lote, 'id_producto' => $record->id_producto],
-                                ['cantidad' => 0, 'fecha_vencimiento' => $data['fecha_vencimiento'] ?? null]
-                            );
-
-                            // Update stock
-                            $detalleLote->increment('cantidad', $cantidad);
+                            Forms\Components\TextInput::make('cantidad')
+                                ->label('Cantidad')
+                                ->numeric()
+                                ->required()
+                                ->minValue(1),
+                                
+                            Forms\Components\Textarea::make('observaciones')
+                                ->label('Observaciones')
+                                ->rows(2),
+                        ])
+                        ->action(function (Productos $record, array $data): void {
+                            $cantidad = (int) $data['cantidad'];
+                            $tipo = $data['tipo_movimiento'];
+                            $cantidadAnteriorProducto = $record->stock_actual;
+                            $now = Carbon::now();
                             
-                            $cantidadNuevaProducto = $cantidadAnteriorProducto + $cantidad;
-                            $record->update(['stock_actual' => $cantidadNuevaProducto]);
+                            $loteId = null;
 
-                        } else {
-                            // SALIDA: Use selected Lote
-                            $loteId = $data['id_lote_origen'];
-                            $detalleLote = detalle_lotes::where('id_lote', $loteId)
-                                ->where('id_producto', $record->id_producto)
-                                ->first();
+                            if ($tipo === 'ENTRADA') {
+                                $semana = $now->weekOfYear;
+                                $mes = $now->month;
+                                $anio = $now->year;
 
-                            // Validation - re-check just in case
-                            if (!$detalleLote || $detalleLote->cantidad < $cantidad) {
-                                Notification::make()
-                                    ->title('Error de Stock')
-                                    ->body("El lote seleccionado ya no tiene suficiente cantidad.")
-                                    ->danger()
-                                    ->send();
-                                return;
+                                $lote = lotes::firstOrCreate(
+                                    ['semana' => $semana, 'anio' => $anio],
+                                    ['mes' => $mes]
+                                );
+                                $loteId = $lote->id_lote;
+
+                                $detalleLote = detalle_lotes::firstOrCreate(
+                                    ['id_lote' => $lote->id_lote, 'id_producto' => $record->id_producto],
+                                    ['cantidad' => 0, 'fecha_vencimiento' => $data['fecha_vencimiento'] ?? null]
+                                );
+
+                                $detalleLote->increment('cantidad', $cantidad);
+                                
+                                $cantidadNuevaProducto = $cantidadAnteriorProducto + $cantidad;
+                                $record->update(['stock_actual' => $cantidadNuevaProducto]);
+
+                            } else {
+                                $loteId = $data['id_lote_origen'];
+                                $detalleLote = detalle_lotes::where('id_lote', $loteId)
+                                    ->where('id_producto', $record->id_producto)
+                                    ->first();
+
+                                if (!$detalleLote || $detalleLote->cantidad < $cantidad) {
+                                    Notification::make()
+                                        ->title('Error de Stock')
+                                        ->body("El lote seleccionado ya no tiene suficiente cantidad.")
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $detalleLote->decrement('cantidad', $cantidad);
+
+                                $cantidadNuevaProducto = $cantidadAnteriorProducto - $cantidad;
+                                $record->update(['stock_actual' => $cantidadNuevaProducto]);
                             }
 
-                            // Update stock
-                            $detalleLote->decrement('cantidad', $cantidad);
+                            MovimientoInventario::create([
+                                'id_producto' => $record->id_producto,
+                                'id_lote' => $loteId,
+                                'tipo_movimiento' => $tipo,
+                                'cantidad' => $cantidad,
+                                'cantidad_anterior' => $cantidadAnteriorProducto,
+                                'cantidad_nueva' => $cantidadNuevaProducto,
+                                'referencia_tipo' => 'AJUSTE',
+                                'observaciones' => $data['observaciones'] ?? 'Ajuste manual de stock',
+                                'usuario_id' => Auth::id(),
+                            ]);
 
-                            $cantidadNuevaProducto = $cantidadAnteriorProducto - $cantidad;
-                            $record->update(['stock_actual' => $cantidadNuevaProducto]);
-                        }
+                            Notification::make()
+                                ->title('Stock actualizado correctamente')
+                                ->success()
+                                ->send();
+                        }),
 
-                        // Record Movement
-                        MovimientoInventario::create([
-                            'id_producto' => $record->id_producto,
-                            'id_lote' => $loteId,
-                            'tipo_movimiento' => $tipo,
-                            'cantidad' => $cantidad,
-                            'cantidad_anterior' => $cantidadAnteriorProducto,
-                            'cantidad_nueva' => $cantidadNuevaProducto,
-                            'referencia_tipo' => 'AJUSTE',
-                            'observaciones' => $data['observaciones'] ?? 'Ajuste manual de stock',
-                            'usuario_id' => Auth::id(),
-                        ]);
+                    Tables\Actions\ViewAction::make()
+                        ->label('Ver')
+                        ->tooltip('Ver Producto')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
 
-                        Notification::make()
-                            ->title('Stock actualizado correctamente')
-                            ->success()
-                            ->send();
-                    }),
+                    Tables\Actions\EditAction::make()
+                        ->label('Editar')
+                        ->tooltip('Editar Producto')
+                        ->color('success')
+                        ->visible(fn (Productos $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-pencil'),
 
-                Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver Producto')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
+                    RestoreAction::make()
+                        ->tooltip('Restaurar Producto')
+                        ->visible(fn (Productos $record) => $record->deleted_at !== null),
 
-                Tables\Actions\EditAction::make()
-                    ->label('Editar')
-                    ->tooltip('Editar Producto')
-                    ->color('success')
-                    ->visible(function (Productos $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-pencil'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Eliminar')
+                        ->tooltip('Eliminar Producto')
+                        ->color('danger')
+                        ->visible(fn (Productos $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-trash'),
 
-                RestoreAction::make()
-                    ->tooltip('Restaurar Producto')
-                    ->visible(function (Productos $record) {
-                        return $record->deleted_at !== null;
-                    }),
-
-                Tables\Actions\DeleteAction::make()
-                    ->label('Eliminar')
-                    ->tooltip('Eliminar Producto')
-                    ->color('danger')
-                    ->visible(function (Productos $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-trash'),
-
-                ForceDeleteAction::make()
-                    ->label('Borrado definitivo')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Eliminar Producto?')
-                    ->modalDescription('¿Estás seguro de que deseas eliminar este Producto? Esta acción no se puede deshacer.')
-                    ->modalSubmitActionLabel('Sí, eliminar')
-                    ->modalCancelActionLabel('Cancelar')
-                    ->action(function (Productos $record) {
-                        $record->forceDelete();
-                    })
-                    ->tooltip('Eliminar definitivamente'),
-
+                    ForceDeleteAction::make()
+                        ->label('Borrado definitivo')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Eliminar Producto?')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar este Producto? Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->action(fn (Productos $record) => $record->forceDelete())
+                        ->tooltip('Eliminar definitivamente'),
+                ]),
             ])
             ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->color('success')
+                        ->label('Restaurar registros')
+                        ->tooltip('Restaurar Productos'),
 
-                // Restauración multiple de datos eliminados logícamente
-                Tables\Actions\RestoreBulkAction::make()
-                    ->color('success')
-                    ->label('Restaurar registros')
-                    ->tooltip('Restaurar Productos')
-                ,
-
-                // Borrado definitivo multiple de datos eliminados logícamente
-                Tables\Actions\ForceDeleteBulkAction::make()
-                    ->color('danger')
-                    ->label('Borrar registros definitivamente')
-                    ->tooltip('Borrar definitivamente Productos')
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->color('danger')
+                        ->label('Borrar registros definitivamente')
+                        ->tooltip('Borrar definitivamente Productos')
+                ]),
             ])
             ->recordUrl(null)
             ->recordAction(null);

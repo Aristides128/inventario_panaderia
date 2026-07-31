@@ -19,7 +19,7 @@ class ListMovimientoInventarios extends ListRecords
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('success')
                 ->form([
-                    Forms\Components\Grid::make(2)
+                    Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
                         ->schema([
                             Forms\Components\TextInput::make('semana')
                                 ->label('Semana')
@@ -28,7 +28,6 @@ class ListMovimientoInventarios extends ListRecords
                                 ->maxValue(53)
                                 ->default(now()->weekOfYear)
                                 ->required()
-                                ->hint('Número de semana del año (1-53)')
                                 ->prefixIcon('heroicon-o-calendar'),
                             
                             Forms\Components\TextInput::make('anio')
@@ -38,7 +37,6 @@ class ListMovimientoInventarios extends ListRecords
                                 ->maxValue(2100)
                                 ->default(now()->year)
                                 ->required()
-                                ->hint('Año del reporte')
                                 ->prefixIcon('heroicon-o-calendar'),
                         ]),
                 ])

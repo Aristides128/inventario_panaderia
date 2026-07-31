@@ -16,8 +16,13 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class EmpleadoResource extends Resource
 {
     protected static ?string $model = Empleado::class;
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationGroup = '⚙️ Gestión de producciones';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
     protected static ?int $navigationSort = 1;
     protected static ?string $modelLabel = 'Empleado';
     protected static ?string $pluralModelLabel = 'Empleados';
@@ -49,13 +54,11 @@ class EmpleadoResource extends Resource
                             ->prefixIcon('heroicon-o-phone'),
                         Forms\Components\Toggle::make('estado')
                             ->label('Empleado Activo')
-                            ->hint('Seleccione el estado del empleado')
-                            ->hintcolor('primary')
                             ->onIcon('heroicon-m-check')
                             ->offIcon('heroicon-m-x-mark')
                             ->required()
                             ->default(true),
-                    ])->columns(2),
+                    ])->columns(['default' => 1, 'sm' => 2]),
             ]);
     }
 
@@ -64,11 +67,16 @@ class EmpleadoResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nombre')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('puesto')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('telefono')
-                    ->searchable(),
+                    ->searchable()
+                    ->visibleFrom('sm'),
                 Tables\Columns\IconColumn::make('estado')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -88,17 +96,18 @@ class EmpleadoResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                ->label('Editar')
-                ->tooltip('Editar empleado'),
-                Tables\Actions\DeleteAction::make()
-                ->label('Eliminar')
-                ->tooltip('Eliminar empleado')
-                ,
-                Tables\Actions\ViewAction::make()
-                ->label('Ver')
-                ->tooltip('Ver empleado')
-                ->color('success'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Ver')
+                        ->tooltip('Ver empleado')
+                        ->color('success'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Editar')
+                        ->tooltip('Editar empleado'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Eliminar')
+                        ->tooltip('Eliminar empleado'),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

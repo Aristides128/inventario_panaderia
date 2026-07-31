@@ -40,9 +40,6 @@ class DetalleProduccionesResource extends Resource
                                 ->placeholder('Seleccione una producción')
                                 ->relationship('Produccion', 'observaciones')
                                 ->prefixIcon('heroicon-o-calendar')
-                                ->hint('Seleccione la producción asociada')
-                                ->hintIcon('heroicon-m-information-circle')
-                                ->hintColor('primary')
                                 ->searchable()
                                 ->preload()
                                 ->required()
@@ -67,14 +64,11 @@ class DetalleProduccionesResource extends Resource
                                                 ->relationship('Producto', 'nombre')
                                                 ->placeholder('Seleccione un producto')
                                                 ->prefixIcon('heroicon-o-shopping-bag')
-                                                ->hint(fn ($get) => $get('id_producto') ? "Disponible: " . (\App\Models\Productos::find($get('id_producto'))?->stock_actual ?? 0) . " u." : null)
-                                                ->hintIcon('heroicon-m-information-circle')
-                                                ->hintColor('info')
                                                 ->searchable()
                                                 ->preload()
                                                 ->required()
                                                 ->reactive()
-                                                ->columnSpan(['md' => 5]),
+                                                ->columnSpan(['default' => 12, 'md' => 5]),
 
                                             Forms\Components\Select::make('id_empleado')
                                                 ->label('Empleado que Recibe')
@@ -84,7 +78,7 @@ class DetalleProduccionesResource extends Resource
                                                 ->searchable()
                                                 ->preload()
                                                 ->required()
-                                                ->columnSpan(['md' => 4]),
+                                                ->columnSpan(['default' => 12, 'md' => 4]),
 
                                             Forms\Components\TextInput::make('cantidad_utilizada')
                                                 ->label('Cantidad Utilizada')
@@ -107,7 +101,7 @@ class DetalleProduccionesResource extends Resource
                                                         }
                                                     },
                                                 ])
-                                                ->columnSpan(['md' => 3]),
+                                                ->columnSpan(['default' => 12, 'md' => 3]),
                                         ]),
                                 ])
                                 ->defaultItems(1)
@@ -132,88 +126,84 @@ class DetalleProduccionesResource extends Resource
     {
         return $table
             ->columns([
-                    Tables\Columns\TextColumn::make('Produccion.observaciones')
-                        ->label('Producción')
-                        ->sortable()
-                        ->searchable(),
-                    Tables\Columns\TextColumn::make('Producto.nombre')
-                        ->label('Producto')
-                        ->sortable()
-                        ->searchable(),
-                    Tables\Columns\TextColumn::make('Empleado.nombre')
-                        ->label('Recibido por')
-                        ->sortable()
-                        ->searchable(),
-                    Tables\Columns\TextColumn::make('cantidad_utilizada')
-                        ->label('Cantidad')
-                        ->numeric()
-                        ->sortable(),
-                    Tables\Columns\TextColumn::make('created_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                    Tables\Columns\TextColumn::make('updated_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                    Tables\Columns\TextColumn::make('deleted_at')
-                        ->dateTime()
-                        ->sortable()
-                        ->toggleable(isToggledHiddenByDefault: true),
-                ])
+                Tables\Columns\TextColumn::make('Produccion.observaciones')
+                    ->label('Producción')
+                    ->sortable()
+                    ->searchable()
+                    ->wrap(),
+                Tables\Columns\TextColumn::make('Producto.nombre')
+                    ->label('Producto')
+                    ->sortable()
+                    ->searchable()
+                    ->wrap(),
+                Tables\Columns\TextColumn::make('Empleado.nombre')
+                    ->label('Recibido por')
+                    ->sortable()
+                    ->searchable()
+                    ->wrap(),
+                Tables\Columns\TextColumn::make('cantidad_utilizada')
+                    ->label('Cantidad')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
             ->filters([
-                      TrashedFilter::make(),
-                ])
+                TrashedFilter::make(),
+            ])
             ->actions([
-    
-                Tables\Actions\EditAction::make()
-                    ->label('Editar')
-                    ->tooltip('Editar detalle')
-                    ->color('success')
-                    ->visible(function (DetalleProducciones $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-pencil'),
-                RestoreAction::make()
-                    ->tooltip('Restaurar detalle')
-                    ->visible(function (DetalleProducciones $record) {
-                        return $record->deleted_at !== null;
-                    }),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Eliminar')
-                    ->tooltip('Eliminar detalle')
-                    ->color('danger')
-                    ->visible(function (DetalleProducciones $record) {
-                        return $record->deleted_at === null;
-                    }),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->label('Editar')
+                        ->tooltip('Editar detalle')
+                        ->color('success')
+                        ->visible(fn (DetalleProducciones $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-pencil'),
 
-                ForceDeleteAction::make()
-                    ->label('Borrar definitivamente')
-                    ->tooltip('Eliminar definitivamente detalle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Eliminar detalle?')
-                    ->modalDescription('¿Estás seguro de que deseas eliminar este detalle? Esta acción no se puede deshacer.')
-                    ->modalSubmitActionLabel('Sí, eliminar')
-                    ->modalCancelActionLabel('Cancelar')
-                    ->action(function (DetalleProducciones $record) {
-                        $record->forceDelete();
-                    }),
+                    RestoreAction::make()
+                        ->tooltip('Restaurar detalle')
+                        ->visible(fn (DetalleProducciones $record) => $record->deleted_at !== null),
+
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Eliminar')
+                        ->tooltip('Eliminar detalle')
+                        ->color('danger')
+                        ->visible(fn (DetalleProducciones $record) => $record->deleted_at === null),
+
+                    ForceDeleteAction::make()
+                        ->label('Borrar definitivamente')
+                        ->tooltip('Eliminar definitivamente detalle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Eliminar detalle?')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar este detalle? Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->action(fn (DetalleProducciones $record) => $record->forceDelete()),
+                ]),
             ])
             ->bulkActions([
-                // Restauración multiple de datos eliminados logícamente
-                Tables\Actions\RestoreBulkAction::make()
-                    ->color('success')
-                    ->label('Restaurar registros')
-                    ->tooltip('Restaurar detalles')
-                ,
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->color('success')
+                        ->label('Restaurar registros')
+                        ->tooltip('Restaurar detalles'),
 
-                // Borrado definitivo multiple de datos eliminados logícamente
-                Tables\Actions\ForceDeleteBulkAction::make()
-                    ->color('danger')
-                    ->label('Borrar registros definitivamente')
-                    ->tooltip('Borrar definitivamente detalles')
-
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->color('danger')
+                        ->label('Borrar registros definitivamente')
+                        ->tooltip('Borrar definitivamente detalles'),
+                ]),
             ])
             ->recordUrl(null)
             ->recordAction(null);

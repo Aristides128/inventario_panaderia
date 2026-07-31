@@ -1,22 +1,5 @@
 # ============================================
-# Stage 1: Build Frontend Assets (Node + Vite)
-# ============================================
-FROM node:20-alpine AS frontend-builder
-
-WORKDIR /app
-
-# Copiar manifiestos e instalar dependencias frontend
-COPY package.json package-lock.json* ./
-RUN npm install
-
-# Copiar archivos de recursos y compilar assets con Vite
-COPY vite.config.js ./
-COPY resources/ ./resources/
-COPY public/ ./public/
-RUN npm run build
-
-# ============================================
-# Stage 2: Install PHP Production Dependencies (Composer)
+# Stage 1: Install PHP Production Dependencies (Composer)
 # ============================================
 FROM composer:latest AS composer-builder
 
@@ -25,7 +8,7 @@ WORKDIR /app
 # Copiar manifiestos de Composer
 COPY composer.json composer.lock ./
 
-# Instalar dependencias de producción de PHP y optimizar autoloader
+# Instalar ÚNICAMENTE dependencias de producción y optimizar autoloader
 RUN composer install \
     --no-dev \
     --no-interaction \
@@ -35,13 +18,13 @@ RUN composer install \
     --ignore-platform-reqs
 
 # ============================================
-# Stage 3: Final Ultra-Optimized Production Image (Alpine Linux)
+# Stage 2: Final Ultra-Lightweight Production Image (Alpine Linux)
 # ============================================
 FROM php:8.3-cli-alpine AS production
 
 LABEL maintainer="inventario_panaderia"
 
-# Instalar librerías de sistema de Alpine y compilar extensiones PHP requeridas
+# Instalar librerías de sistema de Alpine y compilar extensiones PHP requeridas por Laravel y Filament
 RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev \
@@ -72,13 +55,10 @@ WORKDIR /var/www/html
 # Copiar código fuente de la aplicación
 COPY . .
 
-# Copiar dependencias de PHP desde Stage 2
+# Copiar dependencias de producción de PHP desde Stage 1
 COPY --from=composer-builder /app/vendor ./vendor
 
-# Copiar assets frontend compilados por Vite desde Stage 1
-COPY --from=frontend-builder /app/public/build ./public/build
-
-# Publicar assets de Filament directamente dentro de la imagen Docker
+# Publicar assets de Filament dentro de la imagen
 RUN php artisan filament:assets || true
 
 # Copiar y configurar el script de inicio

@@ -21,7 +21,7 @@ class SucursalesResource extends Resource
 {
     protected static ?string $model = Sucursales::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-truck';
+    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
     protected static ?string $navigationGroup = "🚚 Gestión de envíos";
 
@@ -32,15 +32,12 @@ class SucursalesResource extends Resource
             ->schema([
                 Forms\Components\Card::make()
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(['default' => 1, 'sm' => 2])
                             ->schema([
                                 Forms\Components\TextInput::make('nombre')
                                     ->label('Nombre de la Sucursal')
                                     ->placeholder('Ej: Sucursal Centro, Sucursal Norte...')
                                     ->prefixIcon('heroicon-o-building-storefront')
-                                    ->hint('Nombre descriptivo de la sucursal')
-                                    ->hintIcon('heroicon-m-information-circle')
-                                    ->hintColor('primary')
                                     ->required()
                                     ->maxLength(100)
                                     ->columnSpan('full'),
@@ -48,9 +45,6 @@ class SucursalesResource extends Resource
                                 Forms\Components\Textarea::make('direccion')
                                     ->label('Dirección de la Sucursal')
                                     ->placeholder('Ingrese la dirección completa de la sucursal')
-                                    ->hint('Dirección física de la sucursal')
-                                    ->hintIcon('heroicon-m-information-circle')
-                                    ->hintColor('primary')
                                     ->required()
                                     ->rows(3)
                                     ->maxLength(255)
@@ -105,64 +99,56 @@ class SucursalesResource extends Resource
                 TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver sucursal')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Ver')
+                        ->tooltip('Ver sucursal')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
 
-                Tables\Actions\EditAction::make()
-                    ->label('Editar')
-                    ->tooltip('Editar sucursal')
-                    ->color('success')
-                    ->visible(function (Sucursales $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-pencil'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Editar')
+                        ->tooltip('Editar sucursal')
+                        ->color('success')
+                        ->visible(fn (Sucursales $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-pencil'),
 
-                RestoreAction::make()
-                    ->tooltip('Restaurar sucursal')
-                    ->visible(function (Sucursales $record) {
-                        return $record->deleted_at !== null;
-                    }),
+                    RestoreAction::make()
+                        ->tooltip('Restaurar sucursal')
+                        ->visible(fn (Sucursales $record) => $record->deleted_at !== null),
 
-                Tables\Actions\DeleteAction::make()
-                    ->label('Eliminar')
-                    ->tooltip('Eliminar sucursal')
-                    ->color('danger')
-                    ->visible(function (Sucursales $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-trash'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Eliminar')
+                        ->tooltip('Eliminar sucursal')
+                        ->color('danger')
+                        ->visible(fn (Sucursales $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-trash'),
 
-                ForceDeleteAction::make()
-                    ->label('Borrado definitivo')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Eliminar sucursal?')
-                    ->modalDescription('¿Estás seguro de que deseas eliminar esta sucursal? Esta acción no se puede deshacer.')
-                    ->modalSubmitActionLabel('Sí, eliminar')
-                    ->modalCancelActionLabel('Cancelar')
-                    ->action(function (Sucursales $record) {
-                        $record->forceDelete();
-                    })
-                    ->tooltip('Eliminar definitivamente'),
-
+                    ForceDeleteAction::make()
+                        ->label('Borrado definitivo')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Eliminar sucursal?')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar esta sucursal? Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->action(fn (Sucursales $record) => $record->forceDelete())
+                        ->tooltip('Eliminar definitivamente'),
+                ]),
             ])
             ->bulkActions([
-                // Restauración multiple de datos eliminados logícamente
-                Tables\Actions\RestoreBulkAction::make()
-                    ->color('success')
-                    ->label('Restaurar registros')
-                    ->tooltip('Restaurar sucursales')
-                ,
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->color('success')
+                        ->label('Restaurar registros')
+                        ->tooltip('Restaurar sucursales'),
 
-                // Borrado definitivo multiple de datos eliminados logícamente
-                Tables\Actions\ForceDeleteBulkAction::make()
-                    ->color('danger')
-                    ->label('Borrar registros definitivamente')
-                    ->tooltip('Borrar definitivamente sucursales')
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->color('danger')
+                        ->label('Borrar registros definitivamente')
+                        ->tooltip('Borrar definitivamente sucursales')
+                ]),
             ])
             ->recordUrl(null)
             ->recordAction(null);

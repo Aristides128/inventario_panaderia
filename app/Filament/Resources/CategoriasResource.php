@@ -17,7 +17,7 @@ class CategoriasResource extends Resource
 {
     protected static ?string $model = Categorias::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
 
     protected static ?string $navigationGroup = "📦 Gestión de productos";
 
@@ -35,9 +35,6 @@ class CategoriasResource extends Resource
                             ->prefixIcon('heroicon-o-tag')
                             ->placeholder('Ej: Cremas, Bebidas, Panes...')
                             ->maxLength(100)
-                            ->hint('Nombre descriptivo de la categoría')
-                            ->hintIcon('heroicon-o-information-circle')
-                            ->hintColor('primary')
                             ->columnSpan('full'),
 
                         Forms\Components\Textarea::make('descripcion')
@@ -46,10 +43,6 @@ class CategoriasResource extends Resource
                             ->placeholder('Ingrese una descripción detallada de la categoría...')
                             ->maxLength(255)
                             ->default(null)
-
-                            ->hint('Máximo 255 caracteres')
-                            ->hintIcon('heroicon-o-information-circle')
-                            ->hintColor('primary')
                             ->helperText('Esta descripción ayudará a identificar mejor la categoría')
                             ->columnSpan('full')
                             ->rows(3),
@@ -82,17 +75,19 @@ class CategoriasResource extends Resource
                     ->iconPosition('after')
                     ->alignCenter()
                     ->color('gray')
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('sm'),
                 Tables\Columns\TextColumn::make('descripcion')
                     ->icon('heroicon-o-document-text')
                     ->iconColor('primary')
                     ->label('Descripción')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->toggleable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->icon('heroicon-o-calendar')
                     ->color('gray')
                     ->description(fn(Categorias $record) => 'Creado: ' . $record->created_at->diffForHumans())
@@ -108,70 +103,61 @@ class CategoriasResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
                 TrashedFilter::make(),
-
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver categoría')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Ver')
+                        ->tooltip('Ver categoría')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
 
-                Tables\Actions\EditAction::make()
-                    ->label('Editar')
-                    ->color('success')
-                    ->tooltip('Editar categoría')
-                    ->visible(function (Categorias $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-pencil'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Editar')
+                        ->color('success')
+                        ->tooltip('Editar categoría')
+                        ->visible(fn (Categorias $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-pencil'),
 
-                RestoreAction::make()
-                    ->tooltip('Restaurar categoría')
-                    ->label('Restaurar')
-                    ->color('success')
-                    ->visible(function (Categorias $record) {
-                        return $record->deleted_at !== null;
-                    }),
+                    RestoreAction::make()
+                        ->tooltip('Restaurar categoría')
+                        ->label('Restaurar')
+                        ->color('success')
+                        ->visible(fn (Categorias $record) => $record->deleted_at !== null),
 
-                Tables\Actions\DeleteAction::make()
-                    ->label('Eliminar')
-                    ->color('danger')
-                    ->tooltip('Eliminar categoría')
-                    ->visible(function (Categorias $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-trash'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Eliminar')
+                        ->color('danger')
+                        ->tooltip('Eliminar categoría')
+                        ->visible(fn (Categorias $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-trash'),
 
-                ForceDeleteAction::make()
-                    ->label('Eliminar permanentemente')
-                    ->tooltip('Eliminar registro')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Eliminar categoría permanentemente?')
-                    ->modalDescription('Esta acción no se puede deshacer. Todos los productos asociados podrían verse afectados.')
-                    ->modalSubmitActionLabel('Sí, eliminar')
-                    ->modalCancelActionLabel('Cancelar')
-                    ->action(fn(Categorias $record) => $record->forceDelete()),
-
+                    ForceDeleteAction::make()
+                        ->label('Eliminar permanentemente')
+                        ->tooltip('Eliminar registro')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Eliminar categoría permanentemente?')
+                        ->modalDescription('Esta acción no se puede deshacer. Todos los productos asociados podrían verse afectados.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->action(fn(Categorias $record) => $record->forceDelete()),
+                ]),
             ])
             ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->color('success')
+                        ->label('Restaurar registros')
+                        ->tooltip('Restaurar categoría'),
 
-                // Restauración multiple de datos eliminados logícamente
-                Tables\Actions\RestoreBulkAction::make()
-                    ->color('success')
-                    ->label('Restaurar registros')
-                    ->tooltip('Restaurar categoría'),
-
-                // Borrado definitivo multiple de datos eliminados logícamente
-                Tables\Actions\ForceDeleteBulkAction::make()
-                    ->color('danger')
-                    ->label('Borrar registros definitivamente')
-                    ->tooltip('Borrar definitivamente categoría')
-
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->color('danger')
+                        ->label('Borrar registros definitivamente')
+                        ->tooltip('Borrar definitivamente categoría'),
+                ]),
             ])
             ->recordUrl(null)
             ->recordAction(null);

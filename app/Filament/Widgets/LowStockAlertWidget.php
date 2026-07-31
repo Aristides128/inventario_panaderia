@@ -12,6 +12,11 @@ class LowStockAlertWidget extends BaseWidget
     
     protected int | string | array $columnSpan = 'full';
 
+    protected function getColumns(): int
+    {
+        return 3;
+    }
+
     protected function getStats(): array
     {
         // Productos con stock bajo (menos de 10 unidades)

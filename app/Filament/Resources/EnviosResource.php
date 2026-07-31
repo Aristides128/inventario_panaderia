@@ -22,9 +22,19 @@ class EnviosResource extends Resource
 {
     protected static ?string $model = Envios::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
 
     protected static ?string $navigationGroup = "🚚 Gestión de envíos";
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
 
     protected static ?string $modelLabel = 'nuevo envio';
     protected static ?string $pluralModelLabel = 'Listado de envios';
@@ -42,7 +52,7 @@ class EnviosResource extends Resource
                         ->icon('heroicon-o-truck')
                         ->completedIcon('heroicon-o-check-circle')
                         ->schema([
-                            Forms\Components\Grid::make(3)
+                            Forms\Components\Grid::make(['default' => 1, 'md' => 3])
                                 ->schema([
                                     DatePicker::make('fecha_envio')
                                         ->label('Fecha de envío')
@@ -92,9 +102,6 @@ class EnviosResource extends Resource
                                                 ->searchable()
                                                 ->prefixIcon('heroicon-o-shopping-bag')
                                                 ->placeholder('Seleccione un producto')
-                                                ->hint(fn ($get) => $get('id_producto') ? "Disponible: " . (\App\Models\Productos::find($get('id_producto'))?->stock_actual ?? 0) . " u." : null)
-                                                ->hintIcon('heroicon-m-information-circle')
-                                                ->hintColor('info')
                                                 ->options(function () {
                                                     return \App\Models\Productos::all()->mapWithKeys(function ($producto) {
                                                         $formato = $producto->stock_actual > 0 
@@ -109,7 +116,7 @@ class EnviosResource extends Resource
                                                 })
                                                 ->reactive()
                                                 ->preload()
-                                                ->columnSpan(['md' => 8]),
+                                                ->columnSpan(['default' => 12, 'md' => 8]),
 
                                             Forms\Components\TextInput::make('cantidad')
                                                 ->label('Cantidad a enviar')
@@ -132,7 +139,7 @@ class EnviosResource extends Resource
                                                         }
                                                     },
                                                 ])
-                                                ->columnSpan(['md' => 4]),
+                                                ->columnSpan(['default' => 12, 'md' => 4]),
                                         ])
                                 ])
                                 ->cloneable()
@@ -156,9 +163,6 @@ class EnviosResource extends Resource
                         ->schema([
                             Forms\Components\Textarea::make('observaciones')
                                 ->label('📝 Observaciones')
-                                ->hint('Notas adicionales del envío')
-                                ->hintColor('primary')
-                                ->hintIcon('heroicon-m-information-circle')
                                 ->placeholder('Ej: Productos frágiles, horario de entrega preferente, etc.')
                                 ->required()
                                 ->rows(4)
@@ -178,11 +182,13 @@ class EnviosResource extends Resource
                 Tables\Columns\TextColumn::make('Sucursales.nombre')
                     ->label('Sucursal Origen')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('sucursal_destino_id')
                     ->label('Sucursal Destino')
                     ->formatStateUsing(fn ($state) => \App\Models\Sucursales::find($state)?->nombre ?? 'N/A')
-                    ->sortable(),
+                    ->sortable()
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('fecha_envio')
                     ->label('Fecha de Envío')
                     ->date('d/m/Y')
@@ -196,65 +202,57 @@ class EnviosResource extends Resource
 
             ])
             ->filters([
-                //
                 TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Ver')
+                        ->tooltip('Ver envío')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
 
-                Tables\Actions\ViewAction::make()
-                    ->label('Ver')
-                    ->tooltip('Ver envío')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Editar')
+                        ->tooltip('Editar envío')
+                        ->color('success')
+                        ->visible(fn (Envios $record) => $record->deleted_at === null)
+                        ->icon('heroicon-o-pencil'),
 
-                Tables\Actions\EditAction::make()
-                    ->label('Editar')
-                    ->tooltip('Editar envío')
-                    ->color('success')
-                    ->visible(function (Envios $record) {
-                        return $record->deleted_at === null;
-                    })
-                    ->icon('heroicon-o-pencil'),
-                RestoreAction::make()
-                    ->tooltip('Restaurar envío')
-                    ->visible(function (Envios $record) {
-                        return $record->deleted_at !== null;
-                    }),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Eliminar')
-                    ->tooltip('Eliminar envío')
-                    ->color('danger')
-                    ->visible(function (Envios $record) {
-                        return $record->deleted_at === null;
-                    }),
+                    RestoreAction::make()
+                        ->tooltip('Restaurar envío')
+                        ->visible(fn (Envios $record) => $record->deleted_at !== null),
 
-                ForceDeleteAction::make()
-                    ->label('Borrar definitivamente')
-                    ->tooltip('Eliminar definitivamente envío')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('¿Eliminar envío?')
-                    ->modalDescription('¿Estás seguro de que deseas eliminar esta envío? Esta acción no se puede deshacer.')
-                    ->modalSubmitActionLabel('Sí, eliminar')
-                    ->modalCancelActionLabel('Cancelar')
-                    ->action(function (Envios $record) {
-                        $record->forceDelete();
-                    }),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Eliminar')
+                        ->tooltip('Eliminar envío')
+                        ->color('danger')
+                        ->visible(fn (Envios $record) => $record->deleted_at === null),
+
+                    ForceDeleteAction::make()
+                        ->label('Borrar definitivamente')
+                        ->tooltip('Eliminar definitivamente envío')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('¿Eliminar envío?')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar esta envío? Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->action(fn (Envios $record) => $record->forceDelete()),
+                ]),
             ])
             ->bulkActions([
-                // Restauración multiple de datos eliminados logícamente
-                Tables\Actions\RestoreBulkAction::make()
-                    ->color('success')
-                    ->label('Restaurar registros')
-                    ->tooltip('Restaurar envío')
-                ,
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->color('success')
+                        ->label('Restaurar registros')
+                        ->tooltip('Restaurar envío'),
 
-                // Borrado definitivo multiple de datos eliminados logícamente
-                Tables\Actions\ForceDeleteBulkAction::make()
-                    ->color('danger')
-                    ->label('Borrar registros definitivamente')
-                    ->tooltip('Borrar definitivamente envío')
-
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->color('danger')
+                        ->label('Borrar registros definitivamente')
+                        ->tooltip('Borrar definitivamente envío'),
+                ]),
             ])
             ->recordUrl(null)
             ->recordAction(null);

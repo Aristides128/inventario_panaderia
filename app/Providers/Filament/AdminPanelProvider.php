@@ -29,27 +29,16 @@ class AdminPanelProvider extends PanelProvider
             ->profile()
             ->brandName('Inventario panaderia')
             ->brandLogo(asset('storage/images/Panaderia-francesa.png'))
-            ->brandLogoHeight('4rem')
+            ->brandLogoHeight('2.5rem')
             ->favicon(asset('storage/images/Panaderia-francesa.png'))
             ->path('admin')
             ->login()
             ->font('Roboto')
             ->topNavigation()
+            ->maxContentWidth('full')
             ->colors([
-        'primary' => [
-            50 => '238, 242, 255',
-            100 => '224, 231, 255',
-            200 => '199, 210, 254',
-            300 => '165, 180, 252',
-            400 => '129, 140, 248',
-            500 => '99, 102, 241',
-            600 => '79, 70, 229',
-            700 => '67, 56, 202',
-            800 => '55, 48, 163',
-            900 => '49, 46, 129',
-            950 => '30, 27, 75',
-        ],
-    ])
+                'primary' => \Filament\Support\Colors\Color::Indigo,
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

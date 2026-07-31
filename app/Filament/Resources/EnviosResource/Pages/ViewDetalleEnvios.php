@@ -33,7 +33,7 @@ class ViewDetalleEnvios extends ViewRecord
     {
         return $infolist
             ->schema([
-                Infolists\Components\Grid::make(3)
+                Infolists\Components\Grid::make(['default' => 1, 'lg' => 3])
                     ->schema([
                         Infolists\Components\Group::make([
                             Infolists\Components\Section::make('Información del Envío')
@@ -66,8 +66,8 @@ class ViewDetalleEnvios extends ViewRecord
                                         ->placeholder('Sin observaciones registradas.')
                                         ->columnSpanFull()
                                         ->prose(),
-                                ])->columns(2),
-                        ])->columnSpan(2),
+                                ])->columns(['default' => 1, 'sm' => 2]),
+                        ])->columnSpan(['default' => 1, 'lg' => 2]),
 
                         Infolists\Components\Group::make([
                             Infolists\Components\Section::make('Resumen')
@@ -86,7 +86,7 @@ class ViewDetalleEnvios extends ViewRecord
                                         ->fontFamily('mono')
                                         ->color('gray'),
                                 ])
-                        ])->columnSpan(1),
+                        ])->columnSpan(['default' => 1, 'lg' => 1]),
 
                         Infolists\Components\Section::make('Productos Enviados')
                             ->description('Listado de mercancía en tránsito')
@@ -94,14 +94,14 @@ class ViewDetalleEnvios extends ViewRecord
                                 Infolists\Components\Actions\Action::make('print')
                                     ->label('Imprimir Tabular')
                                     ->icon('heroicon-m-printer')
-                                    ->action(fn() => null) // Placeholder o acción real
+                                    ->action(fn() => null)
                                     ->color('gray')
                             ])
                             ->schema([
                                 Infolists\Components\RepeatableEntry::make('detalleEnvios')
                                     ->hiddenLabel()
                                     ->schema([
-                                        Infolists\Components\Grid::make(2)
+                                        Infolists\Components\Grid::make(['default' => 1, 'sm' => 2])
                                             ->schema([
                                                 Infolists\Components\TextEntry::make('producto.nombre')
                                                     ->label('Producto')
@@ -117,8 +117,8 @@ class ViewDetalleEnvios extends ViewRecord
                                                     ->icon('heroicon-m-archive-box'),
                                             ])
                                     ])
-                                    ->grid(2) // Esto hace que se vean dos productos por fila
-                                    ->columnSpanFull()
+                                    ->grid(['default' => 1, 'sm' => 2])
+                                    ->columnSpanFull(),
                             ])->columnSpanFull(),
                     ])
             ]);
